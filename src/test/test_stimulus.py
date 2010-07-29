@@ -9,7 +9,7 @@ import perception
 
 class TestColor(unittest.TestCase):
     """
-	Test class for Color class.
+	Test class for Color class..
 	"""
 	
 	def test_init_color(self):

@@ -1,22 +1,19 @@
 """
-Module providing definition of the Color class, implementing Perception's and the Stimulus' interfaces.
+Module providing definition of the Color class, implementing Perception's and
+the Stimulus' interfaces.
 """
-import stimulus
-import sys
-import perception
 
-class Color(stimulus.Stimulus, perception.Perception):
+class Color(object):
 	"""
-	Color making for both Stimulus and Perception in basic Steel's experiment. The list of 3 values in CIE 
-    space denotes one color: L, a, b.
+	The list of 3 values in CIE: L, a, b in this order. First value should be a
+	float value from range [0,1], a and b should be integers from range [0,255].
 	"""
 	
-	def __init__(self,  L=0, a=0, b=0):
+	def __init__(self,  content):
 		"""
 		Initialize Color
 		
-		@param content: list of objects that constitute the Color
-		@type stimuli: sequence
+		@param content: list of numbers that constitute the Color
+		@type content: sequence
 		"""
-		self.content = [L, a, b]
-	
+		self.content = content

@@ -10,17 +10,8 @@ class Stimulus(object):
 	project see this class.
 	"""
 
-class StimulusColor(Stimulus):
-	"""
-	StimulusColor makes concretization of Stimulus. Encapsulates Color class
-	"""
-	
-	def __init__(self, content):
-		"""
-		Initialisation of StimulusColor takes content and writes it.
-		
-		@type  content: Color
-		@param content: Color instance
-		"""
-		self.color = content
 
+class SimpleStimulus(Stimulus):
+	
+	def __init__(self,  content):
+		self.content = content

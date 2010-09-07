@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 import unittest
-from core.agent import *
+from cog_abm.core.agent import *
 
 
 class TestAgent(unittest.TestCase):

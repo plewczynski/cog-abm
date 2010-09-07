@@ -3,6 +3,7 @@ sys.path.append('../')
 import unittest
 import random
 from cog_abm.extras.color import Color
+import math
 
 
 class TestColor(unittest.TestCase):
@@ -13,11 +14,30 @@ class TestColor(unittest.TestCase):
 		"""
 		
 		random.seed()
-		L = random.random()
-		a = random.randint(0, 255)
-		b = random.randint(0, 255)        
-		col = Color([L, a, b])
-		self.assertEqual(col.content, [L, a, b])
+		for _ in xrange(20):
+			L = random.randint(0, 100)
+			a = random.randint(-255, 255)
+			b = random.randint(-255, 255)
+			col = Color(L, a, b)
+			self.assertEqual(col.to_ML_data(), [L, a, b])
+	
+	
+	def test_distance(self):
+		"""
+		similar color
+		"""
+		for i in xrange(20):
+			L = random.randint(0, 100)
+			a = random.randint(-255, 255)
+			b = random.randint(-255, 255)
+			col = Color(L, a, b)
+			self.assertTrue(col.distance(col) == 0.)
+		
+		a = Color(5, 3, 3)
+		b = Color(6, 1, -1)
+		self.assertTrue(math.fabs(a.distance(b) - 4.58257) < 0.00001)
+	
+
 	
 if __name__ == '__main__':
     unittest.main()

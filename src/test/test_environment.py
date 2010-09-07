@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 import unittest
-from core.environment import *
+from cog_abm.core.environment import *
 
 
 class TestEnvironment(unittest.TestCase):

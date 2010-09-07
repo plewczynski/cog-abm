@@ -2,7 +2,7 @@
 Module implementing agent in our system
 """
 
-from simulation import Simulation
+from cog_abm.core.simulation import Simulation
 
 class Agent(object):
 	"""
@@ -12,21 +12,22 @@ class Agent(object):
 	There is special class for that: AgentState
 	"""
 	
-	def __init__(self, state, sensors = None):
-		if sensors is None:
-			sensors = []
-		self.sensors = sensors
+	def __init__(self, state, sensor = None, environment = None):
+#		if sensors is None:
+#			sensors = []
+		self.sensor = sensor
 		self.state = state
+		self.env = environment
 	
 	
 	def get_environment(self):
 		"""
 		Gives environment where given agent "lives"
 		"""
-		if self.environment is None:
+		if self.env is None:
 			return Simulation.global_environment
 			
-		return self.environment
+		return self.env
 		
 
 	environment = property(get_environment)
@@ -36,20 +37,13 @@ class Agent(object):
 		"""
 		Returns list with sensors perception of given stimulus
 		"""
-		return [sensor.sense(stimulus) for sensor in self.sensors]
+#		return [sensor.sense(stimulus) for sensor in self.sensors]
+		return self.sensor.sense(stimulus)
 	
 	
-	def accept_v(self, vobj):
-		return vobj.do(self.state)
-	
-	
-	def accept_fun(self,  fun):
-		return fun(self.state)
-	
-	
-	def accept_v_and_sense(self, vobj, stimulus):
-		return vobj.do(self.state, self.sense(stimulus))
-
-
-	def accept_fun_and_sense(self, fun,  stimulus):
-		return fun(self.state, self.sense(stimulus))
+	def classify(self, stimulus):
+		return self.state.classify(self.sense(stimulus))
+		
+		
+	def __str__(self):
+		return self.state.__str__()

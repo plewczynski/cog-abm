@@ -3,7 +3,7 @@ Module providing environment and it's functionality
 """
 
 import random
-
+from itertools import imap
 
 class Environment(object):
 	"""
@@ -11,7 +11,8 @@ class Environment(object):
 	It's main function is to provide stimuli for agents
 	"""
 	
-	def __init__(self,  stimuli):
+	
+	def __init__(self,  stimuli, use_distance = False, distance = 7.0710678118654755):
 		"""
 		Initialize environment
 		
@@ -19,6 +20,8 @@ class Environment(object):
 		@type stimuli: sequence
 		"""
 		self.stimuli = stimuli
+		self.use_distance = use_distance
+		self.dist = float(distance)
 		
 
 	def get_random_stimulus(self):
@@ -39,4 +42,20 @@ class Environment(object):
 		@rtype: sequence
 		"""
 		return self.stimuli
+		
+
+	def get_random_stimuli(self, n, dist = None):
+		if not self.use_distance:
+			return [self.get_random_stimulus() for _ in xrange(n)]
+		
+		ret = [self.get_random_stimulus()]
+		for i in xrange(n-1):
+			
+			mind = 0
+			while mind < self.dist:
+				tmp = self.get_random_stimulus()
+				mind = min(imap(tmp.distance, ret))
+			ret.append(tmp)
+		
+		return ret
 		

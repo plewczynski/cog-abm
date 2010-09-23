@@ -5,13 +5,36 @@ import logging
 import cPickle
 from time import time
 sys.path.append('../')
-from itertools import *
+from itertools import imap
+import math
+
+
+
+def compose(fun_out, fun_in):
+	def composition(*args, **kwargs):
+		return fun_out(fun_in(*args, **kwargs))
+	
+	return composition
+
+
+
+def avg(lista):
+	return [math.fsum(lista)/len(lista)]
+
+
+def wmin(lista):
+	return [min(lista)]
+
+
+def wmax(lista):
+	return [max(lista)]
 
 
 
 cc_computed = {}
 
 def count_categ(agents, params, it):
+
 	global cc_computed
 	stimuli = params['stimuli']
 	
@@ -30,16 +53,29 @@ def count_categ(agents, params, it):
 	
 
 
-def avg_cc(agents, params, it):
-	
-	return [float(sum(count_categ(agents, params, it))) / len(agents)]
+from cog_abm.extras.metrics import *
+
+#def avg_cc(agents, params, it):
+#	return [float(sum(count_categ(agents, params, it))) / len(agents)]
 
 
 
 fun_map = {
 		'cc':count_categ, 
-		'avg_cc':avg_cc, 
-		'it': lambda ag, par, it : [it]
+		'it': lambda ag, par, it : [it], 
+		'DSA': lambda ag, par, it: map(DS_A, ag), 
+		'DS': lambda ag, par, it: [DS(ag, it)], 
+		'CSA': lambda ag, par, it: map(CS_A, ag), 
+		'CS': lambda ag, par, it: [CS(ag, it)], 
+		'cv': lambda ag, par, it:[cv(ag, it)]
+		}
+
+
+
+pref_fun_map = {
+		'avg':avg, 
+		'min':wmin, 
+		'max':wmax
 		}
 
 
@@ -51,11 +87,13 @@ def gen_res(results, params, funs):
 	retv = []
 	for it, agents in results:
 		
+		logging.debug("Calculating iteration "+str(it)+"...")
 		w = []
 		map(lambda f: w.extend(f(agents, params, it)), funs)
 		
 		retv.append(w)
-	
+		logging.debug("Calculating iteration "+str(it)+"... Done")
+
 	logging.info("Calculating stats finished. Total time: "+str(time()-start_time))
 	return retv
 
@@ -84,7 +122,6 @@ def main():
 			help="Label of y-axis")
 	
 
-	# Parse the arguments (defaults to parsing sys.argv).
 	opts, args = optp.parse_args()
 	
 	if len(args) == 0:
@@ -97,9 +134,7 @@ def main():
 	if opts.chart == True and len(args)<2:
 		optp.error("Can't draw a chart with one dimension data")
 
-	
-	# Here would be a good place to check what came in on the command line and
-	# call optp.error("Useful message") to exit if all it not well.
+
 
 	log_level = logging.DEBUG # default logging.WARNING
 
@@ -119,7 +154,20 @@ def main():
 	
 	funcs = []
 	for arg in args:
-		fun = fun_map.get(arg, None)
+		ind = arg.find("_")
+		fun = None
+		if  ind != -1:
+			p_fun = pref_fun_map.get(arg[0:ind])
+			
+			m_fun = fun_map.get(arg[ind+1:len(arg)])
+
+			if p_fun is not None and m_fun is not None:
+				fun = compose(p_fun, m_fun)
+
+
+		if fun is None:
+			fun = fun_map.get(arg, None)
+			
 		if fun is not None:
 			funcs.append(fun)
 		else:

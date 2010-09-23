@@ -12,7 +12,7 @@ class Environment(object):
 	"""
 	
 	
-	def __init__(self,  stimuli, use_distance = False, distance = 7.0710678118654755):
+	def __init__(self,  stimuli, use_distance = False, distance = 45.):
 		"""
 		Initialize environment
 		
@@ -44,7 +44,7 @@ class Environment(object):
 		return self.stimuli
 		
 
-	def get_random_stimuli(self, n, dist = None):
+	def get_random_stimuli(self, n):
 		if not self.use_distance:
 			return [self.get_random_stimulus() for _ in xrange(n)]
 		

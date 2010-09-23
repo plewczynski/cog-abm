@@ -33,6 +33,10 @@ class Color(object):
 	def distance(self, other):
 		l = zip(self.to_ML_data(), other.to_ML_data())
 		return math.sqrt(math.fsum([(x-y)**2 for x, y in l]))
+	
+	
+	def __eq__(self, other):
+		return self.L == other.L and self.a == other.a and self.b == other.b
 
 
 

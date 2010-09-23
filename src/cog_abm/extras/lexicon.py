@@ -6,7 +6,7 @@ argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
 class Syllable:
 	
-	allowed_syllables = ['a','b','c','d', 'e']
+	allowed_syllables = ["a","b","c","d", "e"]
 	
 	def __init__(self, content):
 		self.content = content
@@ -22,12 +22,12 @@ class Syllable:
 	
 	@staticmethod
 	def get_instance(value):
-		if value in allowed_syllables:
+		if value in Syllable.allowed_syllables:
 			return value
 
 	@staticmethod
 	def set_allowed_syllables(new_set):
-		allowed_syllables = new_set
+		Syllable.allowed_syllables = new_set
 		
 		
 	@staticmethod
@@ -44,7 +44,7 @@ class Word(object):
 		
 	def __eq__(self, other):
 		#if isinstance(other, Word):
-			return self.syllables == other.syllables
+		return self.syllables == other.syllables
 		#return False
 	
 	def __ne__(self, other):
@@ -70,6 +70,10 @@ class Word(object):
 		while w in set:
 			w = Word.get_random()
 		return w
+	
+	
+	def __hash__(self):
+		return hash(str(self))
 
 
 
@@ -126,15 +130,19 @@ class Lexicon(object):
 		
 	
 	def decrease(self, category, word):
-		w = self.base.pop((category, word), 0) - Lexicon.delta_dec
+		#w = self.base.pop((category, word), 0) - Lexicon.delta_dec
+		#print category, str(word) , "\n", self
+
+		w = self.base.pop((category, word)) - Lexicon.delta_dec
 		if w>0.:
 			self.base[(category, word)] = w
 		#moga zostac nieuzywane slowa w self.F
 
 
 	def _decreaser(self, choser, key):
-		#print self, key[0], str(key[1])
-		tmp = self.base.pop(key, 0.) # $$$$$$$$$$$$$$$ czy moze Lexicon.s?
+#		print str(key[0]), str(key[1]), "\n", self
+
+		tmp = self.base.pop(key) # $$$$$$$$$$$$$$$ czy moze Lexicon.s?
 		remove = []
 		for k, v in self.base.iteritems():
 			if choser(k):

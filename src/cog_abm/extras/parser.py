@@ -5,7 +5,7 @@ import urllib
 import xml.dom.minidom
 import sys
 from pygraph.readwrite import markup
-from cog_abm.core.network import *
+from cog_abm.core.network import Network
 from cog_abm.core.agent import *
 from cog_abm.core.environment import *
 from cog_abm.extras.color import Color
@@ -33,8 +33,8 @@ class Parser(object):
 	
 	def init_interaction_dictionary(self):
 		self.interaction_parser_map = {}
-		self.interaction_parser_map["1"] = self.parse_discrimination_game
-		#self.interaction_parser_map["2"] = self.parse_guessing_game
+		self.interaction_parser_map["DiscriminationGame"] = self.parse_discrimination_game
+		self.interaction_parser_map["GuessingGame"] = self.parse_guessing_game
 		#self.interaction_parser_map["3"] = self.parse_genetic_game
 		
 	def build_DOM(self, source):
@@ -51,7 +51,7 @@ class Parser(object):
 			sock = xml.dom.minidom.parse(file)
 			return sock
 		
-	def parse_agent(self, agent, simulation):
+	def parse_agent(self, agent, network):
 		"""
 		Parse agent properties when given as DOM object.
 		
@@ -61,19 +61,21 @@ class Parser(object):
 		@type simulation: simulation
 		@param simulation: Simulation object
 		"""
-		id = agent.getElementsByTagName("id")[0].firstChild.data
-		env_name = agent.getElementsByTagName("environment")[0].firstChild.data
-		node_name = agent.getElementsByTagName("node_name")[0].firstChild.data
-		sensor = agent.getElementsByTagName("sensor")
-		sensor_type = sensor[0].getElementsByTagName("type")[0].firstChild.data
-		lrn = agent.getElementsByTagName("learning_method")
-		lrn_type = lrn[0].getElementsByTagName("type")[0].firstChild.data
+		#TODO:
+		id = self.return_element_if_exist(agent, "id")
+		env_name = self.return_element_if_exist(agent, "environment")
+		node_name = self.return_element_if_exist(agent, "node_name")
+		#sensor = agent.getElementsByTagName("sensor")
+		#sensor_type = sensor[0].getElementsByTagName("type")[0].firstChild.data
+		#lrn = agent.getElementsByTagName("classifier")
+		#lrn_type = lrn[0].getElementsByTagName("type")[0].firstChild.data
 		
-		simulation.agents.append(Agent(id, simulation.environments[env_name], 
-		                               lrn_type, sensor_type, None))
-		simulation.network.add_agent(simulation.agents[-1], node_name, id)
-	
-	def parse_agents(self, source, simulation):
+		agent = Agent(environment = env_name)
+		if network is not None:
+			network.add_agent(agent, node_name)
+		return agent
+		
+	def parse_agents(self, source, network):
 		"""
 		Parse agents when given in xml.
 
@@ -83,10 +85,15 @@ class Parser(object):
 		@type source: String
 		@param source: XML document for pygraph directory.
 		"""
+		if source is None:
+			return None
+		agents = []
 		sock = self.build_DOM(source)
-		agents = sock.getElementsByTagName("agent")
-		for agent in agents:
-			self.parse_agent(agent, simulation)
+		agent_sock = sock.getElementsByTagName("agent")
+		for agent in agent_sock:
+			agents.append(self.parse_agent(agent, network))
+			
+		return agents
 		
 	def parse_environment(self, doc):
 		"""
@@ -114,40 +121,48 @@ class Parser(object):
 		@rtype: pygraph
 		@return: Returns graph from pygraph library.
 		"""
+		if source is None:
+			return None
 		with open(source, 'r') as file:
 			return Network(markup.read(file.read()))
 		
-	def parse_simulation(self, source, simulation):
+	def parse_simulation(self, source):
 		"""
 		Parse simulation parameters given in xml document.
 		
 		@type source: String
 		@param source: Simulation XML document directory.
 		
-		@type simulation: Simulation
-		@param simulation: Simulation object created from xml document.
+		@rtype: Dictionary
+		@return: Simulation params created from xml document.
 		"""
-		sock = self.build_DOM(source)
-		
-		inters = sock.getElementsByTagName("interaction")
-		for i in inters:
-			#simulation.add_interaction(inter.getAttribute("type"))
-			simulation.interactions[1] = 1
-		
-		freq = sock.getElementsByTagName("history")[0].getAttribute("freq")
-		if (sock.getElementsByTagName("network")[0].hasAttribute("source")):
-			net_source = sock.getElementsByTagName("network")[0].getAttribute("source")
-			simulation.network = self.parse_graph(net_source)
+		if source is None:
+			return None
 			
+		sock = self.build_DOM(source)
+		dictionary = {}
+		
+		dictionary["dump_freq"] = self.return_if_exist(sock,"history", "freq", int)
+		dictionary["topology"] = self.parse_graph(self.return_if_exist
+		                                          (sock,"network", "source", str))
+		
+		environments = {}
 		envs = sock.getElementsByTagName("environment")
 		for env in envs:
 			env_name = env.getAttribute("name")
 			env_source = env.getAttribute("source")
-			simulation.environments[env_name] = self.parse_environment(env_source)
-	
-		agents_source = sock.getElementsByTagName("agents")[0].getAttribute("source")
-		self.parse_agents(net_source, simulation)
+			environments[env_name] = self.parse_environment(env_source)
 		
+		dictionary ['environments']  = environments
+		dictionary["agents"] = self.parse_agents(self.return_if_exist
+							(sock,"agents", "source", str), dictionary["topology"])
+		
+		inter = sock.getElementsByTagName("interaction")[0]
+		#for i in inters:
+		dictionary.update(self.interaction_parser_map[self.return_if_exist(sock, "interaction", "type", str)](inter))
+		#print dictionary
+		return dictionary
+				
 	def parse_munsell_chips(self, chips):
 		list = []
 		for chip in chips:
@@ -155,19 +170,60 @@ class Parser(object):
 		return list
 		
 	def parse_munsell_chip(self, chip):
-		#hue = chip.getElementsByTagName("hue")[0].firstChild.data
-		#value = float(chip.getElementsByTagName("value")[0].firstChild.data)
-		#chroma = int(chip.getElementsByTagName("chroma")[0].firstChild.data)
 		L = float(chip.getElementsByTagName("L")[0].firstChild.data)
 		a = float(chip.getElementsByTagName("a")[0].firstChild.data)
 		b = float(chip.getElementsByTagName("b")[0].firstChild.data)
-		#return MunsellColor(hue, value, chroma, L, a, b)
+
 		return Color(L, a, b)
 
 	def parse_munsell_environment(self, env):
 		return self.parse_munsell_chips(env.getElementsByTagName
 		                                ("munsell_chip"))
 		
-	def parse_discrimination_game(self, interaction):
-		pass
+	def parse_discrimination_game(self, inters):
+		dictionary = {"interaction_type":"DG"}
+		params = inter.getElementsByTagName("params")[0]
+		
+		dictionary["num_iter"] = self.return_if_exist(params, "num_iter", "value", int)
+		dictionary["context_size"] = self.return_if_exist(params, "context_size", "value", int)
+		dictionary["alpha"] = self.return_if_exist(params,"alpha", "value", float)
+		dictionary["beta"] = self.return_if_exist(params,"beta", "value", float)
+		dictionary["sigma"] = self.return_if_exist(params,"inc_category_treshold", "value", float)
+		dictionary["inc_category_treshold"] = self.return_if_exist(params,"inc_category_treshold", "value", float)
+		dictionary["classifier"] = self.return_if_exist(params, "classifier", "name", str)
+		
+	def parse_guessing_game(self, inter):
+		dictionary = {"interaction_type":"GG"}
+		params = inter.getElementsByTagName("params")[0]
+
+		dictionary["num_iter"] = self.return_if_exist(params, "num_iter", "value", int)
+		dictionary["context_size"] = self.return_if_exist(params, "context_size", "value", int)
+		dictionary["alpha"] = self.return_if_exist(params,"alpha", "value", float)
+		dictionary["beta"] = self.return_if_exist(params,"beta", "value", float)
+		dictionary["sigma"] = self.return_if_exist(params,"inc_category_treshold", "value", float)
+		dictionary["inc_category_treshold"] = self.return_if_exist(params,"inc_category_treshold", "value", float)
+		dictionary["classifier"] = self.return_if_exist(params, "classifier", "name", str)
+		
+		return dictionary
+		
+	def return_if_exist(self, param, name, value, function=None):	
+		#print param.getElementsByTagName(name)
+		if (len(param.getElementsByTagName(name)) == 0):
+			return None
+		elif (param.getElementsByTagName(name)[0].hasAttribute(value)):
+			if (function is None):
+				return param.getElementsByTagName(name)[0].getAttribute(value)
+			else:
+				return function(param.getElementsByTagName(name)[0].getAttribute(value))
+		else:
+			return None
+	
+	def return_element_if_exist(self, sock, name, function=None):
+		if (len(sock.getElementsByTagName(name)) == 0):
+			return None
+		else:
+			if function is None:
+				return sock.getElementsByTagName(name)[0].firstChild.data
+			else:
+				return function(sock.getElementsByTagName(name)[0].firstChild.data)
 		

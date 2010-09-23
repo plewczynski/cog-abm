@@ -14,7 +14,7 @@ class Simulation(object):
 	"""
 	
 	global_environment = None
-	environments = []
+	environments = {}
 	
 	def __init__(self,  graph = None,  interaction = None,  agents = None):
 		self.graph = graph
@@ -33,7 +33,7 @@ class Simulation(object):
 		f.close()
 		
 
-	def run(self, iterations = 1000, co_ile = 10):
+	def run(self, iterations = 1000, dump_freq = 10):
 		"""
 		Begins simulation.
 		
@@ -49,12 +49,22 @@ class Simulation(object):
 		
 		for i in xrange(iterations):
 			if self.interaction.num_agents() == 2:
+#				a = random.choice(self.agents)
+#				b = self.graph.get_random_neighbour(a)
+#				r1, r2 = self.interaction.interact(a, b)
+#				a.add_inter_result(r1)
+#				b.add_inter_result(r2)
 				(a, b) = random.choice(self.graph.edges())
-				self.interaction.interact(self.agents[a],  self.agents[b])
+				r1, r2 = self.interaction.interact(self.agents[a],  self.agents[b])
+				self.agents[a].add_inter_result(r1)
+				self.agents[b].add_inter_result(r2)
 			else :
-				self.interaction.interact(random.choice(self.agents))
+				a = random.choice(self.agents)
+				r = self.interaction.interact(a)
+				a.add_inter_result(r)
+				
 			
-			if (i+1) % co_ile == 0:
+			if (i+1) % dump_freq == 0:
 				self.dump_results(i+1)
 				
 		

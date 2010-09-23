@@ -89,7 +89,7 @@ class Network(object):
 		@rtype: number
 		@return: Number of nodes.
 		"""
-		return len(graph)
+		return len(self.nodes)
 	
 	#UNCOMMENT jezeli zmieniamy ze agent moze nalezec do kilku wezlow
 	# wtedy moze pojawic sie problem ze slownikiem ?

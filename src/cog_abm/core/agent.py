@@ -12,14 +12,20 @@ class Agent(object):
 	There is special class for that: AgentState
 	"""
 	
-	def __init__(self, state, sensor = None, environment = None):
-#		if sensors is None:
-#			sensors = []
+#	def __init__(self, id = None, state = None, sensor = None, environment = None):
+	def __init__(self, state = None, sensor = None, environment = None):
+		self.id = id
 		self.sensor = sensor
 		self.state = state
 		self.env = environment
+		self.inter_res = []
 	
-	
+	def set_state(self, state):
+		self.state = state
+
+	def set_sensor(self, sensor):
+		self.sensor = sensor
+		
 	def get_environment(self):
 		"""
 		Gives environment where given agent "lives"
@@ -27,7 +33,7 @@ class Agent(object):
 		if self.env is None:
 			return Simulation.global_environment
 			
-		return self.env
+		return Simulation.environments[self.env]
 		
 
 	environment = property(get_environment)
@@ -37,7 +43,6 @@ class Agent(object):
 		"""
 		Returns list with sensors perception of given stimulus
 		"""
-#		return [sensor.sense(stimulus) for sensor in self.sensors]
 		return self.sensor.sense(stimulus)
 	
 	
@@ -47,3 +52,7 @@ class Agent(object):
 		
 	def __str__(self):
 		return self.state.__str__()
+	
+	
+	def add_inter_result(self, res):
+		self.inter_res.append(res)

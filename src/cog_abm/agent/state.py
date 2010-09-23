@@ -57,6 +57,13 @@ class AgentState(object):
 		e.g. high-level classifier.
 		"""
 		return self.state
+	
+	
+	def clean(self, environment, sensor):
+		"""
+		Alows agent state to clean up before dumping into file
+		"""
+		pass
 		
 class StateHistory(object):
 	"""

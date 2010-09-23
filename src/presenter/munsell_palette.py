@@ -6,12 +6,12 @@ pygtk.require("2.0")
 import gtk
 import pango
 import copy
-import grapefruit
-from cog_abm.extras.parser import *
+from presenter import grapefruit
+from cog_abm.extras.color import *
 from cog_abm.core.result import *
 from steels.steels_experiment import *
 #from steels.analyzer import *
-from time import time, sleep
+from time import time
 
 
 from itertools import imap, izip
@@ -21,11 +21,11 @@ argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
 class WCSPalette(object):
 	def __init__(self):
-		self.source = "../cog_abm/extras/330WCS.xml"
-		self.wcs_environment = Parser().parse_environment(self.source)
+		#self.source = "../cog_abm/extras/330WCS.xml"
+		self.stimuli = get_WCS_colors()
 	
 	def get_colors(self):
-		return self.wcs_environment.get_all_stimuli()
+		return self.stimuli
 
 class AgentData(object):
 	def __init__(self, cielab):
@@ -33,10 +33,13 @@ class AgentData(object):
 		self.painted = []
 		self.focals = []
 		
-	def handle_categories(self, iter, category_set):
+	def handle_categories(self, iter, agent):
 		self.painted.append(range(330))
 		self.focals.append({})
 		dictionary = {}
+		category_set = [agent.state.classify(stimuli) for stimuli in self.cielab]
+		#print category_set
+		
 		for i in xrange(len(category_set)):
 			if category_set[i] not in dictionary:
 				dictionary[category_set[i]] = []
@@ -45,7 +48,11 @@ class AgentData(object):
 		focals = self.focals[iter]
 		for key in dictionary.keys():
 			focal = self.find_focal_point(dictionary[key])
-			focals[focal] = True
+			if (hasattr(agent.state, "word_for")):
+				focals[focal] = str(agent.state.word_for(key))
+			else: 
+				focals[focal] = None
+			#print "key, focal:", key, focal
 			self.set_focal(iter, dictionary[key], focal)
 			
 	def set_focal(self, iter, category, focal):
@@ -88,17 +95,25 @@ class WCSTable(object):
 		self.current_iteration = 0
 		self.agent_data = None
 
+	def create_legend(self):
+		self.legend = gtk.DrawingArea()
+		self.legend.connect("expose-event", self.legend_expose)
+		
+		return self.legend
+		
 	def get_number_of_categories(self, iter):
 		if self.agent_data is None:
 			return 0
 		return self.agent_data.get_number_of_categories(iter)
+	
+	def legend_expose(self, area, event):
+		self.gc = self.legend.window.new_gc()
+		self.paint_legend(self.current_iteration)
 		
 	def area_expose(self, area, event):
 		#self.style = self.area.get_style()
 		#self.gc = self.style.fg_gc[gtk.STATE_NORMAL]
-
 		self.gc = self.area.window.new_gc()
-		self.create_palette_labels()
 		self.paint_cellars(self.current_iteration)
 		
 	def show(self):
@@ -107,9 +122,30 @@ class WCSTable(object):
 	def set_agent_data(self, agent_data):
 		self.agent_data = agent_data
 		
+	def paint_legend(self, iter):
+		if not hasattr(self.agent_data, "focals"):
+			return 
+			
+		self.current_iteration = iter
+		self.gc = self.legend.window.new_gc()
+		self.legend.window.clear()
+		column = 0
+		
+		focals = self.agent_data.focals[iter]
+		for focal in focals:
+			self.gc.set_rgb_fg_color(self.colors[focal])
+			column +=2*self.CELLAR_SIZE
+			self.legend.window.draw_rectangle(self.gc, True, column, 
+						self.CELLAR_SIZE,self.CELLAR_SIZE, self.CELLAR_SIZE)
+			self.gc.set_rgb_fg_color(gtk.gdk.color_parse("black"))
+			self.pangolayout.set_text(focals[focal]) 
+			self.legend.window.draw_layout(self.gc, column, 2*self.CELLAR_SIZE, 
+			                             self.pangolayout)
+		
 	def paint_cellars(self, iter):
 		self.current_iteration = iter
-		self.gc = self.area.window.new_gc()
+		self.gc = self.area.window.new_gc(line_width=2)
+		self.area.window.clear()
 		
 		if self.agent_data is None:
 			paintable = range(330)
@@ -125,40 +161,73 @@ class WCSTable(object):
 			self.gc.set_rgb_fg_color(self.colors[paintable[i]])
 			self.area.window.draw_rectangle(self.gc, True, col, row, 
 			                           self.CELLAR_SIZE, self.CELLAR_SIZE)
-			#if i in focals:
-			#	self.gc.set_rgb_fg_color(self.colors[320])
-			#	self.area.window.draw_arc(self.gc, True, col, row, 
-			#						self.CELLAR_SIZE, self.CELLAR_SIZE, 0, 23040)#360*64)
 
 		for i in xrange(10):
 			self.gc.set_rgb_fg_color(self.colors[paintable[320+i]])
-			self.area.window.draw_rectangle(self.gc, True, 0, i*(self.CELLAR_SIZE + 
-					self.CELLAR_SPACE), self.CELLAR_SIZE, self.CELLAR_SIZE)
-			#if (320 + i) in focals:
-			#	self.gc.set_rgb_fg_color(self.colors[320])
-			#	self.area.window.draw_arc(self.gc, True, 0, i*(self.CELLAR_SIZE + 
-			#			self.CELLAR_SPACE), self.CELLAR_SIZE, self.CELLAR_SIZE, 0, 23040)
-		#sleep(0.01)
+			self.area.window.draw_rectangle(self.gc, True, 1, i*(self.CELLAR_SIZE + 
+					self.CELLAR_SPACE)+1, self.CELLAR_SIZE, self.CELLAR_SIZE)
+
+		self.create_palette_labels()
+		self.paint_category_borders(paintable)
 		self.paint_focals(focals)
-									
+	
+	def paint_category_borders(self, paintable):
+		self.gc.set_rgb_fg_color(gtk.gdk.color_parse("black"))
+		space = self.CELLAR_SIZE + self.CELLAR_SPACE
+		self.area.window.draw_rectangle(self.gc, False, 1, 1, 
+				self.CELLAR_SIZE, 10*(self.CELLAR_SIZE) + 9*self.CELLAR_SPACE)
+			
+		self.area.window.draw_rectangle(self.gc, False, 2*space, space, 
+				40*self.CELLAR_SIZE +39*self.CELLAR_SPACE, 8*self.CELLAR_SIZE + 7*self.CELLAR_SPACE)
+		
+		#paint column lines
+		for i in xrange(8):
+			index =i*40
+			for j in xrange(39):
+				if (paintable[index] is not paintable[index+1]):
+					self.area.window.draw_line(self.gc, (3+j)*space-1, (1+i)*space-1, (3+j)*space-1, (2+i)*space-1)
+				index += 1
+		
+		#paint row lines
+		for i in xrange(7):	
+			index = i*40
+			for j in xrange(40):
+					if (paintable[index] is not paintable[index+40]):
+						self.area.window.draw_line(self.gc, (2+j)*space-1, (2+i)*space-1, (3+j)*space-1, (2+i)*space-1)
+					index += 1
+		
+		#paint row lines in side box			
+		index = 319
+		for i in xrange(9):
+				index += 1
+				if (paintable[index] is not paintable[index+1]):
+					self.area.window.draw_line(self.gc, 0, (1+i)*space, space-1, (1+i)*space)		
+					
 	def paint_focals(self, focals):
+		circle_size = self.CELLAR_SIZE-1
+		wheel_size = self.CELLAR_SIZE-1
 		for i in focals:
 			if i < 320:
 				col = (2+i%40)*(self.CELLAR_SIZE + self.CELLAR_SPACE)
 				row = (1+i/40)*(self.CELLAR_SIZE + self.CELLAR_SPACE)
-				
-				self.gc.set_rgb_fg_color(self.colors[320])
+				self.gc.set_rgb_fg_color(gtk.gdk.color_parse("black"))
+				self.area.window.draw_arc(self.gc, False, col, row, 
+									circle_size, circle_size, 0, 23040)#360*64)
+				self.gc.set_rgb_fg_color(gtk.gdk.color_parse("white"))
 				self.area.window.draw_arc(self.gc, True, col, row, 
-									self.CELLAR_SIZE, self.CELLAR_SIZE, 0, 23040)#360*64)
+									wheel_size, wheel_size, 0, 23040)#360*64)
 								
-
 			else:
-				self.gc.set_rgb_fg_color(self.colors[320])
-				self.area.window.draw_arc(self.gc, True, 0, (i-320)*(self.CELLAR_SIZE + 
-						self.CELLAR_SPACE), self.CELLAR_SIZE, self.CELLAR_SIZE, 0, 23040)
+				self.gc.set_rgb_fg_color(gtk.gdk.color_parse("black"))
+				self.area.window.draw_arc(self.gc, False, 1, (i-320)*(self.CELLAR_SIZE + 
+						self.CELLAR_SPACE)+1, circle_size, circle_size, 0, 23040)
+				self.gc.set_rgb_fg_color(gtk.gdk.color_parse("white"))
+				self.area.window.draw_arc(self.gc, True, 1, (i-320)*(self.CELLAR_SIZE + 
+						self.CELLAR_SPACE)+1, wheel_size, wheel_size, 0, 23040)
 						
 	def create_palette_labels(self):
 		space = self.CELLAR_SIZE + self.CELLAR_SPACE
+		self.gc.set_rgb_fg_color(gtk.gdk.color_parse("black"))
 		for i in xrange(1, 41):
 			col = (1 + i) * space
 			row = 0
@@ -172,7 +241,7 @@ class WCSTable(object):
 			                             self.pangolayout)
 			
 class MunsellPaletteInterface(object):
-	def __init__(self, path, agents_viewed):
+	def __init__(self, path, agents_viewed, legends=False):
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_title("Agent colour categories map")
 		self.window.set_position(gtk.WIN_POS_CENTER)
@@ -184,10 +253,11 @@ class MunsellPaletteInterface(object):
 		start_time = time()
 		self.init_wcs_template()
 		self.agent_WCSTable = []
+		self.legends = legends
 	
 		self.get_results_from_folder(path)
 		print "Processing data..."
-		self.set_agents_palettes()
+		self.set_agents_data()
 		print 'Done in:', time() - start_time,'s'
 		
 		self.main_vbox = gtk.VBox(False, 3)
@@ -195,7 +265,7 @@ class MunsellPaletteInterface(object):
 	
 		self.main_vbox.add(self.template.area)
 
-		self.create_agents_container(agents_viewed)
+		self.create_agents_container(agents_viewed, legends)
 		
 		self.main_vbox.add(self.scrolled_window)
 		
@@ -212,7 +282,7 @@ class MunsellPaletteInterface(object):
 		self.window.show_all()		
 		self.set_current_iteration_widgets(0)
 		
-	def set_agents_palettes(self):
+	def set_agents_data(self):
 		
 		for i in xrange(self.agents_size):
 			self.agents_data.append(AgentData(self.stimuli))
@@ -237,23 +307,15 @@ class MunsellPaletteInterface(object):
 		(self.iterations, self.result_set) = zip(*zipped)
 		
 	def get_iteration_from_file(self, source):
-#		result = ResultHandler()
-#		result.unpickle(source)
-#		tuple = result.get_results()
 		with open(source, 'r') as file:
 			tuple = cPickle.load(file)
 		
 		self.iterations.append(tuple[0]) 
-		agents_result = []
-		for agent in tuple[1]:
-			agent_result = []
-			for stimuli in self.stimuli:
-				agent_result.append(agent.state.classify(stimuli))
-			agents_result.append(agent_result)
+		agents = tuple[1]
 		
 		#constant number of agents for every iteration
-		self.agents_size = len(agents_result)
-		return agents_result
+		self.agents_size = len(agents)
+		return agents
 		
 	def init_wcs_template(self):
 			template = WCSPalette()
@@ -262,7 +324,7 @@ class MunsellPaletteInterface(object):
 				r, g, b, a = self.convert_to_RGB(color)
 				self.colors.append(gtk.gdk.Color(r, g, b))
 	
-	def create_agents_container(self, agent_viewed):
+	def create_agents_container(self, agent_viewed, legend):
 		self.cat_size_labels = []
 		row = (agent_viewed-1)/2 +1
 		col = 2 
@@ -273,7 +335,7 @@ class MunsellPaletteInterface(object):
 		for i in xrange(agent_viewed):
 			r = i / col
 			c = i % col
-			self.container.attach(self.create_agent_panel(i), c, c+1, r, r+1)
+			self.container.attach(self.create_agent_panel(i, legend), c, c+1, r, r+1)
 		
 		#self.container.show()
 		self.scrolled_window = gtk.ScrolledWindow()
@@ -281,7 +343,7 @@ class MunsellPaletteInterface(object):
 		self.scrolled_window.set_size_request(1200, 400)
 		#self.scrolled_window.show()
 		
-	def create_agent_panel(self, number):
+	def create_agent_panel(self, number, legend):
 		combo = gtk.combo_box_new_text()
 		for i in xrange(self.agents_size):
 			combo.append_text("Agent " + str(i))
@@ -294,11 +356,20 @@ class MunsellPaletteInterface(object):
 		
 		cat_size_label = gtk.Label()
 		self.cat_size_labels.append(cat_size_label)
-		hbox = gtk.HBox(True, 3)
-		hbox.pack_start(combo)
-		hbox.pack_start(cat_size_label)
+			
+		table = gtk.Table(2, 2, False)
+		table.attach(combo, 0, 1, 0, 1)
+		table.attach(cat_size_label, 1, 2, 0, 1)
+		
+		if (legend == True):
+			window = gtk.ScrolledWindow()
+			window.add_with_viewport(wcs_table.create_legend())
+			window.set_size_request(-1, 50)
+			window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			table.attach(window, 0, 2, 1, 2)
+			
 		panel = gtk.VPaned()
-		panel.pack1(hbox)
+		panel.pack1(table)
 		panel.pack2(wcs_table.area)
 		#panel.show()
 		return panel
@@ -330,6 +401,8 @@ class MunsellPaletteInterface(object):
 		index = combobox.get_active()
 		self.agent_WCSTable[cb_number].set_agent_data(self.agents_data[index])
 		self.agent_WCSTable[cb_number].paint_cellars(self.current_iteration)
+		if (self.legends == True):
+			self.agent_WCSTable[cb_number].paint_legend(self.current_iteration)
 		
 		self.cat_size_labels[cb_number].set_text("Number of categories: " + 
 				str(self.agent_WCSTable[cb_number].get_number_of_categories
@@ -342,6 +415,8 @@ class MunsellPaletteInterface(object):
 		
 		for i in xrange(len(self.agent_WCSTable)):
 			self.agent_WCSTable[i].paint_cellars(self.current_iteration)
+			if (self.legends == True):
+				self.agent_WCSTable[i].paint_legend(self.current_iteration)
 	
 	def set_current_iteration_widgets(self, iter):
 		self.current_iteration = iter
@@ -360,21 +435,23 @@ class MunsellPaletteInterface(object):
 		#c2 = grapefruit.Color.NewFromLab(color.L, color.a/100, color.b/100, wref=grapefruit.Color.WHITE_REFERENCE['std_D65'])
 		#if c1 is  c2:
 		#	print c1, c2
-		return grapefruit.Color.NewFromLab(color.L, color.a/100, color.b/100, wref=grapefruit.Color.WHITE_REFERENCE['std_D50'])
+		return grapefruit.Color.NewFromLab(color.L, color.a/100, color.b/100, wref=grapefruit.Color.WHITE_REFERENCE['std_D65'])
 
 	def main(self):
 		gtk.main()
 
 if __name__ == "__main__":
-	if len(sys.argv) is not 3:
-		print "You should specify directory of result set and number of agents viewed simultaneously"
-	else:	
+	if len(sys.argv) == 3:
 		mpi = MunsellPaletteInterface(sys.argv[1], int(sys.argv[2]))
 		mpi.main()
-
+	elif len(sys.argv) == 4:
+		mpi = MunsellPaletteInterface(sys.argv[1], int(sys.argv[2]), bool(sys.argv[3]))
+		mpi.main()
+	else:	
+		print "You should specify directory of result set and number of agents viewed simultaneously\
+		and optionaly if legends have to be viewed"
 #TODO:
 #ladne parametry w mainie!! Konrad
 #try dla wczytywania plikow
-#legendy do gry w zgadywanie
 #dopasowanie do wielkosci okna !!
 #konwersja do rgb

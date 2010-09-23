@@ -4,9 +4,9 @@ This module implements Steels exepriment.
 import math
 import sys
 import random
-#sys.path.append("../")
+sys.path.append("../")
 
-from itertools import imap, izip
+from itertools import imap, izip, izip_longest
 argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
@@ -23,6 +23,7 @@ class ReactiveUnit(object):
 		self.central_value = central_value
 		
 		self.sigma = def_value(sigma, ReactiveUnit.def_sigma)
+		self.mdub_sqr_sig = (-2.)*(self.sigma**2.)
 		
 	
 	
@@ -34,7 +35,7 @@ class ReactiveUnit(object):
 			imap(lambda (xi, mi):(xi-mi)**2., izip(x, self.central_value)))
 #						[(xi-mi)**2. for xi, mi in zip(x, self.central_value)])
 
-		return math.exp(-0.5 * fsum / (self.sigma**2.))
+		return math.exp(fsum / self.mdub_sqr_sig)
 	
 	
 	def __eq__(self,  other):
@@ -44,6 +45,11 @@ class ReactiveUnit(object):
 			return False
 
 
+	def dist(self, other):
+		return math.sqrt(math.fsum([(m-mp)**2 for m, mp in \
+			izip_longest(self.central_value, other.central_value, fillvalue=0.)]))
+	
+	
 
 class AdaptiveNetwork(object):
 	""" Adaptive network is some kind of classifier
@@ -96,15 +102,16 @@ class AdaptiveNetwork(object):
 	
 	def incrase_sample(self, sample):
 		self._update_units( \
-					#lambda u, w: (u, w+float(self.beta)*u.value_for(sample)))
-			lambda u, w: (u, min(1., w+self.beta*u.value_for(sample))))
+					lambda u, w: (u, w+float(self.beta)*u.value_for(sample)))
+
+			#lambda u, w: (u, min(1., w+self.beta*u.value_for(sample))))
 					# ograniczenie na max wage
 	
 	
 	#TODO: revrite it to be in time O(1)
 	def forgetting(self):
 		self._update_units(lambda u, w: (u, self.alpha*w))
-		#self.remove_low_units(0.1**30)
+		#self.remove_low_units(0.1**40)
 	
 	
 	
@@ -156,12 +163,14 @@ class SteelsClassifier(object):
 	
 	def sample_strength(self, category_id, sample):
 		return self.categories[category_id].reaction(sample)
+	
 
 
 
-
+from cog_abm.extras.metrics import DS_A
 #TODO: poprawic dziedziczenie
 class DiscriminationGame(object):
+
 	
 	def_inc_category_treshold = 0.95
 	
@@ -172,7 +181,11 @@ class DiscriminationGame(object):
 	
 	
 	def num_agents(self):
-		return 1
+		return 2
+	
+	
+	def save(self, agent, result):
+		agent.add_inter_result(("DG", result))
 	
 	
 	def disc_game(self, agent, context, topic):
@@ -184,26 +197,23 @@ class DiscriminationGame(object):
 			#not a  problem - count > 1 so it will add new category
 			
 		ccontext = [agent.classify(c) for c in context]
-		
 		count = ccontext.count(ctopic)
 		
-		#TODO: uscislic definicje success rate !!
-		succ_rate = 1.-float(count - 1)/(self.context_len-1)
-		
-		return (count == 1, ctopic, succ_rate)
+		return (count == 1, ctopic)
 
 	
-	def learning_after(self, agent, topic, succ, succ_rate, ctopic = None):
+	def learning_after(self, agent, topic, succ, ctopic = None):
 
+		succ_rate = DS_A(agent)
+		#print succ_rate
 		ml_topic = agent.sense(topic).to_ML_data()
 		if succ:
 			# success
 			agent.state.classifier.incrase_samples_category(ml_topic)
 		elif succ_rate >= self.inc_category_treshold:
 			#agent.state.incrase_samples_category(topic)
-			
 			if ctopic is None:
-				ctopic = agent.state.classify(ml_topic)
+				ctopic = agent.state.classifier.classify(ml_topic)
 			agent.state.classifier.add_category(ml_topic, ctopic)
 
 		else:
@@ -215,22 +225,37 @@ class DiscriminationGame(object):
 	
 	def play_with_learning(self, agent, context, topic):
 
-		succ, ctopic, succ_rate = \
+		succ, ctopic = \
 				self.disc_game(agent, context, topic)
 		
-		self.learning_after(agent, topic, succ, succ_rate, ctopic)
+		self.learning_after(agent, topic, succ, ctopic)
 		
-		return succ, ctopic, topic, context, succ_rate
-
+		return succ, ctopic, topic, context
 	
-	def interact(self, agent, context = None):
+	
+	def play_save(self, agent, context, topic):
+		succ, ctopic = self.disc_game(agent, context, topic)
+		self.save(agent, succ)
+		return succ, ctopic
+
+
+	def play_learn_save(self, agent, context, topic):
+		succ, ctopic, topic, context = \
+			self.play_with_learning(agent, context, topic)
 		
-		if context is None:
-			env = agent.get_environment()
-			context = env.get_random_stimuli(self.context_len)
+		#agent.add_inter_result(("DG", succ))
+		self.save(agent, succ)
+		return succ, ctopic, topic, context 
+		
+	def interact(self, agent1, agent2):
+		
+		env = agent1.get_environment()
+		context = env.get_random_stimuli(self.context_len)
 		
 		topic = random.choice(context)
-		return self.play_with_learning(agent, context, topic)
+		succ1, _, _, _ = self.play_with_learning(agent1, context, topic)
+		succ2, _, _, _ = self.play_with_learning(agent2, context, topic)
+		return (("DG", succ1), ("DG", succ2))
 
 
 #from cog_abm.agent.state import AgentState
@@ -252,59 +277,64 @@ class GuessingGame(object):
 
 	
 
-	def learning_after(self, speaker, hearer, succ, sp_topic, he_topic, word):
-		#print "LA: %s, %s"%(sp_topic, he_topic)
+	def learning_after(self, speaker, hearer, succ, sp_topic, he_topic, word, topic):
 		if succ:
 			speaker.state.lexicon.increase_word(sp_topic, word)
 			hearer.state.lexicon.increase_category(he_topic, word)
+			# z opisu w 4.3 pierwszy paragraf
+			for a in [speaker, hearer]:
+				a.state.classifier.incrase_samples_category(a.sense(topic).to_ML_data())
 		else:
+
 			speaker.state.lexicon.decrease(sp_topic, word)
 			hearer.state.lexicon.decrease(he_topic, word)
+			#domniemania z punktu 6 w ostatnim podrozdziale 2
+			#hearer.state.classifier
+			self.disc_game.learning_after(hearer, topic, False)
 		
 
 	def guess_game(self, speaker, hearer):
 		
 		env = speaker.get_environment()
-		context = [env.get_random_stimulus() for _ in \
-						xrange(self.disc_game.context_len)]
+		context = env.get_random_stimuli(self.disc_game.context_len)
 		
 		topic = random.choice(context)
 		
-		succ, spctopic, _, _, _ = \
-				self.disc_game.play_with_learning(speaker, context, topic)
+		succ, spctopic = self.disc_game.play_save(speaker, context, topic)
 
 		if not succ:
-			#TODO Q: game fails - now should learn in DG ?
+			self.disc_game.learning_after(speaker, topic, succ, spctopic)
 			return False
 		
 		f = speaker.state.word_for(spctopic)
 		if f is None:
 			f = speaker.state.lexicon.add_element(spctopic)
+
 		
 		#step 4
 		hcategory = hearer.state.category_for(f)
-		
-		#print "S_Word:%s\tH_Categ: %s" % (f, hcategory)
+#		print "hearers category for "+str(f)+" is "+str(hcategory)
 		
 		if hcategory is None:
-			#print "Hearer nie zna slowa", 
-			#fail in game
+			#fail in game - hearer doesn't know the word f
 			
-			succ, ctopic, _ = self.disc_game.disc_game(hearer, context, topic)
+			succ, hectopic = self.disc_game.play_save(hearer, context, topic)
 			#TODO Q: should hearer also learn?
 			if succ:
 				#print " ale dyskryminuje topic "+str(ctopic)
 				#???: the word form f is associated with category ...??
-				hearer.state.lexicon.add_element(ctopic, f)
+				hearer.state.lexicon.add_element(hectopic, f)
 
 			else:
 				#print " i go nie dyskryminuje"
-				class_id = hearer.state.classifier.add_category(
-				                                                hearer.sense(topic).to_ML_data())
-				#print "3l: aw: ", f, class_id
+				
+				#class_id = hearer.state.classifier.add_category(
+				#                                                hearer.sense(topic).to_ML_data())
+				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+				self.disc_game.learning_after(hearer, topic, succ, hectopic)
+				class_id = hearer.classify(topic)
 				hearer.state.lexicon.add_element(class_id, f)
-				#hearer.state.lexicon.add_element(ctopic, f)
-			#TODO: w steelsie jest brak tresholdu!
+
 			# disc_game samo stworzy ew kategorie?
 			
 			return False
@@ -314,22 +344,81 @@ class GuessingGame(object):
 												hearer.sense(c)), context)[1]
 		
 		#step 6
-		#czy wskazuje hearer na topic
 		
 		succ = hsf == topic
 		hectopic = hearer.classify(hsf)
 		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
-		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f)
+#		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
+		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
 		
-		#print "Wynik gry: "+str(succ)
+		return succ
+
+
+	def nice_guess_game(self, speaker, hearer):
+		
+		env = speaker.get_environment()
+		context = env.get_random_stimuli(self.disc_game.context_len)
+		
+		topic = random.choice(context)
+		
+		succ, spctopic = self.disc_game.play_save(speaker, context, topic)
+
+		if not succ:
+			self.disc_game.learning_after(speaker, topic, succ, spctopic)
+			return False
+		
+		f = speaker.state.word_for(spctopic)
+		if f is None:
+			f = speaker.state.lexicon.add_element(spctopic)
+
+		
+		#step 4
+		hcategory = hearer.state.category_for(f)
+#		print "hearers category for "+str(f)+" is "+str(hcategory)
+		
+		if hcategory is None:
+			#fail in game - hearer doesn't know the word f
+			
+			succ, hectopic = self.disc_game.play_save(hearer, context, topic)
+			#TODO Q: should hearer also learn?
+			if succ:
+				#print " ale dyskryminuje topic "+str(ctopic)
+				#???: the word form f is associated with category ...??
+				hearer.state.lexicon.add_element(hectopic, f)
+
+			else:
+				#print " i go nie dyskryminuje"
+				
+				#class_id = hearer.state.classifier.add_category(
+				#                                                hearer.sense(topic).to_ML_data())
+				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+				
+				class_id = hearer.classify(topic)
+				hearer.state.lexicon.add_element(class_id, f)
+
+			# disc_game samo stworzy ew kategorie?
+			
+			return False
+			
+
+		hsf = argmax(lambda c: hearer.state.sample_strength(hcategory, 
+												hearer.sense(c)), context)[1]
+		
+		#step 6
+		
+		succ = hsf == topic
+		hectopic = hearer.classify(hsf)
+		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
+#		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
+		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
+		
 		return succ
 		
-
+		
 
 	def interact(self, speaker, hearer):
-		
-		self.guess_game(speaker, hearer)
-		return None
+		r = self.guess_game(speaker, hearer)
+		return (("GG", r), ("GG", r))
 
 
 
@@ -346,7 +435,7 @@ class SteelsAgentState(object):
 	
 	def sample_strength(self, category, sample):
 		return self.classifier.sample_strength(category, sample.to_ML_data())
-
+	
 
 
 class SteelsAgentStateWithLexicon(SteelsAgentState):
@@ -371,18 +460,128 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 
 def default_stimuli():
 	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.extras.color import get_WCS_colors
+	from cog_abm.extras.color import get_1269Munsell_chips
 
-	return [SimpleStimulus(c) for c in get_WCS_colors()]
+	return [SimpleStimulus(c) for c in get_1269Munsell_chips()]
 	
 	
 	
 #Steels experiment main part
 
-def steels_uniwersal_basic_experiment(num_iter, agents, stimuli, interaction, 
+def steels_uniwersal_basic_experiment(num_iter, agents, environments, interaction, 
 			classifier = SteelsClassifier, topology = None, 
-			inc_category_treshold = None):
+			inc_category_treshold = None, dump_freq = 50):
+				
+	sys.path.append("../")
+	from cog_abm.core.agent import Agent
+	from cog_abm.agent.sensor import SimpleSensor
+	from pygraph.classes.graph import graph
+	from pygraph.algorithms.generators import generate
+	from cog_abm.core.environment import Environment
+	from cog_abm.stimuli.stimulus import SimpleStimulus
+	from cog_abm.extras.color import Color
+	from cog_abm.core.simulation import Simulation
+
+
+	num_agents = len(agents)
+	topology = def_value(topology, 
+	                     generate(num_agents, num_agents*(num_agents-1)/2))
+	
+	stimuli = def_value(None, default_stimuli())
+	
+	if inc_category_treshold is not None:
+		interaction.__class__.def_inc_category_treshold = inc_category_treshold
+		
+	env = Environment(stimuli, True)
+	for key in environments.keys():
+			Simulation.environments[key] = Environment([SimpleStimulus(c) for c in environments[key].stimuli], True)
+	#bez sensu...
+	if "global" in environments:
+		glob = Environment([SimpleStimulus(c) for c in environments["global"].stimuli], True)
+	else:
+		glob = None
+		
+	Simulation.global_environment = def_value(glob , env)
+
+	s = Simulation(topology, interaction, agents)
+	res = s.run(num_iter, dump_freq)
+	
+	return res
+
+
+
+
+def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None, 
+			environments = {}, interaction_type="GG", beta = 1., context_size = 4,
+			agents = [], dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
+	
+	sys.path.append("../")
+	from cog_abm.core.agent import Agent
+	from cog_abm.agent.sensor import SimpleSensor
+	from pygraph.classes.graph import graph
+	from pygraph.algorithms.generators import generate
+	from cog_abm.core.environment import Environment
+	from cog_abm.stimuli.stimulus import SimpleStimulus
+	from cog_abm.extras.color import Color
+	from cog_abm.core.simulation import Simulation
+	
+	
+	classifier = def_value(classifier, SteelsClassifier)
+	
+	#niestety narazie tak 
+	for agent in agents:
+		agent.set_state(SteelsAgentStateWithLexicon(classifier()))
+		agent.set_sensor(SimpleSensor())
+	
+	AdaptiveNetwork.def_alpha = float(alpha)
+	AdaptiveNetwork.def_beta = float(beta)
+	ReactiveUnit.def_sigma = float(sigma)
+	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
+	
+	return steels_uniwersal_basic_experiment(num_iter, agents,
+		stimuli, DiscriminationGame(context_size), dump_freq = dump_freq)
+
+
+def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None, 
+			environments = None, interaction_type="GG", beta = 1., context_size = 4,
+			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
+	
+	sys.path.append("../")
+	
+	from cog_abm.core.agent import Agent
+	from cog_abm.agent.sensor import SimpleSensor
+	from pygraph.classes.graph import graph
+	from pygraph.algorithms.generators import generate
+	from cog_abm.core.environment import Environment
+	from cog_abm.stimuli.stimulus import SimpleStimulus
+	from cog_abm.extras.color import Color
+	from cog_abm.core.simulation import Simulation
+	
+	environments = def_value(environments, {})
+	agents = def_value(agents, [])
+	classifier = def_value(None, SteelsClassifier)
+	
+	#agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
+
+	#niestety narazie tak 
+	for agent in agents:
+		agent.set_state(SteelsAgentStateWithLexicon(classifier()))
+		agent.set_sensor(SimpleSensor())
+	
+	AdaptiveNetwork.def_alpha = float(alpha)
+	AdaptiveNetwork.def_beta = float(beta)
+	ReactiveUnit.def_sigma = float(sigma)
+	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
+	
+	return steels_uniwersal_basic_experiment(num_iter, agents, environments, 
+						GuessingGame(None, context_size), topology = topology, 
+						dump_freq = dump_freq)
+
+
+
+def old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, interaction, 
+			classifier = SteelsClassifier, topology = None, 
+			inc_category_treshold = None, dump_freq = 50):
 				
 	sys.path.append("../")
 	from cog_abm.core.agent import Agent
@@ -408,15 +607,15 @@ def steels_uniwersal_basic_experiment(num_iter, agents, stimuli, interaction,
 	Simulation.global_environment = env
 
 	s = Simulation(topology, interaction, agents)
-	res = s.run(num_iter, 50)
+	res = s.run(num_iter, dump_freq)
 	
 	return res
 
 
 
 
-def steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = None,
-					topology = None, context_size = 4, classifier = None, 
+def old_steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = None,
+					topology = None, context_size = 4, classifier = None, dump_freq = 50, 
 					inc_category_treshold = 0.95, alpha = 0.1, beta = 1., sigma = 1.):
 	
 	sys.path.append("../")
@@ -441,12 +640,12 @@ def steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = None,
 	ReactiveUnit.def_sigma = float(sigma)
 	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
 	
-	return steels_uniwersal_basic_experiment(num_iter, agents, \
-									stimuli, DiscriminationGame(context_size))
+	return old_steels_uniwersal_basic_experiment(num_iter, agents,
+		stimuli, DiscriminationGame(context_size), dump_freq = dump_freq)
 
 
-def steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = None,
-					topology = None, context_size = 4, classifier = None, 
+def old_steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = None,
+					topology = None, context_size = 4, classifier = None, dump_freq = 50, 
 					inc_category_treshold = 0.95, alpha = 0.1, beta = 1., sigma = 1.):
 	
 	sys.path.append("../")
@@ -472,10 +671,9 @@ def steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = None,
 	ReactiveUnit.def_sigma = float(sigma)
 	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
 	
-	return steels_uniwersal_basic_experiment(num_iter, agents, stimuli, 
-						GuessingGame(None, context_size), topology = topology)
-
-
+	return old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, 
+						GuessingGame(None, context_size), topology = topology, 
+						dump_freq = dump_freq)
 
 
 

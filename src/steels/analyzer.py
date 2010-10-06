@@ -36,7 +36,7 @@ cc_computed = {}
 def count_categ(agents, params, it):
 
 	global cc_computed
-	stimuli = params['stimuli']
+	stimuli = params['environments']['global'].stimuli
 	
 	def pom(a):
 		Z = {}

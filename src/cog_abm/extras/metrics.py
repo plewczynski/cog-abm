@@ -154,8 +154,9 @@ def basic_dist(set1, set2):
 
 
 if __name__ == '__main__':
+	#To test some new distances - should use weights!
 	import sys
-	sys.path.append("/home/konrad/ABM_COG")
+	sys.path.append("../")
 	from steels.steels_experiment import *
 	rus = [(ReactiveUnit([x, x, x]), 1./(x+1)) for x in xrange(3)]
 	rus2 = [(ReactiveUnit([x+1, x+1, x+1]), 1./(x+1)) for x in xrange(3)]

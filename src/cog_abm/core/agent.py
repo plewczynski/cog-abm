@@ -12,8 +12,8 @@ class Agent(object):
 	There is special class for that: AgentState
 	"""
 	
-#	def __init__(self, id = None, state = None, sensor = None, environment = None):
-	def __init__(self, state = None, sensor = None, environment = None):
+	def __init__(self, id = None, state = None, sensor = None, environment = None):
+#	def __init__(self, state = None, sensor = None, environment = None):
 		self.id = id
 		self.sensor = sensor
 		self.state = state

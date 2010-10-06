@@ -352,68 +352,6 @@ class GuessingGame(object):
 		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
 		
 		return succ
-
-
-	def nice_guess_game(self, speaker, hearer):
-		
-		env = speaker.get_environment()
-		context = env.get_random_stimuli(self.disc_game.context_len)
-		
-		topic = random.choice(context)
-		
-		succ, spctopic = self.disc_game.play_save(speaker, context, topic)
-
-		if not succ:
-			self.disc_game.learning_after(speaker, topic, succ, spctopic)
-			return False
-		
-		f = speaker.state.word_for(spctopic)
-		if f is None:
-			f = speaker.state.lexicon.add_element(spctopic)
-
-		
-		#step 4
-		hcategory = hearer.state.category_for(f)
-#		print "hearers category for "+str(f)+" is "+str(hcategory)
-		
-		if hcategory is None:
-			#fail in game - hearer doesn't know the word f
-			
-			succ, hectopic = self.disc_game.play_save(hearer, context, topic)
-			#TODO Q: should hearer also learn?
-			if succ:
-				#print " ale dyskryminuje topic "+str(ctopic)
-				#???: the word form f is associated with category ...??
-				hearer.state.lexicon.add_element(hectopic, f)
-
-			else:
-				#print " i go nie dyskryminuje"
-				
-				#class_id = hearer.state.classifier.add_category(
-				#                                                hearer.sense(topic).to_ML_data())
-				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-				
-				class_id = hearer.classify(topic)
-				hearer.state.lexicon.add_element(class_id, f)
-
-			# disc_game samo stworzy ew kategorie?
-			
-			return False
-			
-
-		hsf = argmax(lambda c: hearer.state.sample_strength(hcategory, 
-												hearer.sense(c)), context)[1]
-		
-		#step 6
-		
-		succ = hsf == topic
-		hectopic = hearer.classify(hsf)
-		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
-#		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
-		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
-		
-		return succ
-		
 		
 
 	def interact(self, speaker, hearer):
@@ -435,7 +373,7 @@ class SteelsAgentState(object):
 	
 	def sample_strength(self, category, sample):
 		return self.classifier.sample_strength(category, sample.to_ML_data())
-	
+
 
 
 class SteelsAgentStateWithLexicon(SteelsAgentState):
@@ -494,7 +432,7 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 		
 	env = Environment(stimuli, True)
 	for key in environments.keys():
-			Simulation.environments[key] = Environment([SimpleStimulus(c) for c in environments[key].stimuli], True)
+			Simulation.environments[key] = Environment(environments[key].stimuli, True)
 	#bez sensu...
 	if "global" in environments:
 		glob = Environment([SimpleStimulus(c) for c in environments["global"].stimuli], True)
@@ -512,8 +450,8 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 
 
 def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None, 
-			environments = {}, interaction_type="GG", beta = 1., context_size = 4,
-			agents = [], dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
+			environments = None, interaction_type="GG", beta = 1., context_size = 4,
+			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
 	
 	sys.path.append("../")
 	from cog_abm.core.agent import Agent
@@ -525,8 +463,9 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 	from cog_abm.extras.color import Color
 	from cog_abm.core.simulation import Simulation
 	
-	
-	classifier = def_value(classifier, SteelsClassifier)
+	environments = def_value(environments, {})
+	agents = def_value(agents, [])
+	classifier = def_value(None, SteelsClassifier)
 	
 	#niestety narazie tak 
 	for agent in agents:
@@ -538,8 +477,9 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 	ReactiveUnit.def_sigma = float(sigma)
 	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
 	
-	return steels_uniwersal_basic_experiment(num_iter, agents,
-		stimuli, DiscriminationGame(context_size), dump_freq = dump_freq)
+	return steels_uniwersal_basic_experiment(num_iter, agents, environments, 
+						DiscriminationGame(context_size), topology = topology, 
+						dump_freq = dump_freq)
 
 
 def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None, 

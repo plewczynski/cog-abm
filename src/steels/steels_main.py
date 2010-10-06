@@ -17,24 +17,19 @@ def load_params(file):
 		return default_params()
 	
 	from cog_abm.extras.parser import Parser
-	
 	return Parser().parse_simulation(file)
 	
 
 	
 def default_params():
-	return defult_paramsGG()
-
-
-def defult_paramsGG():
 	from cog_abm.stimuli.stimulus import SimpleStimulus
 	from cog_abm.extras.color import get_1269Munsell_chips
-	return {	
+	return {	'interaction_type': "DG", 
 					'stimuli' : [SimpleStimulus(c) for c in get_1269Munsell_chips()],  
 					'num_agents': 10,
 					'context_size' : 4,
-					'num_iter' : 10000,
-					'dump_freq':50, 
+					'num_iter' : 1000,
+					'dump_freq':100, 
 					'topology' : None, 
 					'classifier' : None,
 					'alpha' : 0.1, 
@@ -43,22 +38,6 @@ def defult_paramsGG():
 					'inc_category_treshold' : 0.95
 				}
 
-def defult_paramsDG():
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import get_1269Munsell_chips
-	return {	
-					'stimuli' : [SimpleStimulus(c) for c in get_1269Munsell_chips()],  
-					'num_agents': 10,
-					'context_size' : 4,
-					'num_iter' : 500,
-					'dump_freq':5, 
-					'topology' : None, 
-					'classifier' : None,
-					'alpha' : 0.1, 
-					'beta' : 1., 
-					'sigma' : 1., 
-					'inc_category_treshold' : 0.95
-				}
 
 
 if __name__ == "__main__":
@@ -106,19 +85,14 @@ if __name__ == "__main__":
 	
 	#print params
 	
-	if opts.game == "DG":
-		r = old_steels_basic_experiment_DG(**params)
-	elif opts.game == "GG":
-		r = old_steels_basic_experiment_GG(**params)
-	
-#	if opts.game is not None:
-#		params["interaction_type"]  == opts.game
-#			
-#
-#	if params["interaction_type"] == "DG":
-#		r = old_steels_basic_experiment_DG(**params)
-#	elif params["interaction_type"] == "GG":
-#		r = old_steels_basic_experiment_GG(**params)
+	if opts.game is not None:
+		params["interaction_type"]  == opts.game
+			
+
+	if params["interaction_type"] == "DG":
+		r = steels_basic_experiment_DG(**params)
+	elif params["interaction_type"] == "GG":
+		r = steels_basic_experiment_GG(**params)
 		
 
 	

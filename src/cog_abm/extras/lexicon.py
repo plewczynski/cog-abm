@@ -142,7 +142,7 @@ class Lexicon(object):
 	def _decreaser(self, choser, key):
 #		print str(key[0]), str(key[1]), "\n", self
 
-		tmp = self.base.pop(key) # $$$$$$$$$$$$$$$ czy moze Lexicon.s?
+		tmp = self.base.pop(key)
 		remove = []
 		for k, v in self.base.iteritems():
 			if choser(k):

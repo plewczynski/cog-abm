@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<graph>
+       <node id="0"/>
+       <node id="1"/>
+       <node id="2"/>
+       <node id="3"/>
+       <node id="4"/>
+       <node id="5"/>
+       <node id="6"/>
+       <node id="7"/>
+       <node id="8"/>
+       <node id="9"/>
+       <edge from="0" to="1" wt="1"/>
+       <edge from="1" to="0" wt="1"/>
+       <edge from="0" to="2" wt="1"/>
+       <edge from="2" to="0" wt="1"/>   
+       <edge from="0" to="3" wt="1"/>
+       <edge from="3" to="0" wt="1"/>
+       <edge from="0" to="4" wt="1"/>
+       <edge from="4" to="0" wt="1"/>   
+       <edge from="0" to="5" wt="1"/>
+       <edge from="5" to="0" wt="1"/>
+       <edge from="0" to="6" wt="1"/>
+       <edge from="6" to="0" wt="1"/>   
+       <edge from="0" to="7" wt="1"/>
+       <edge from="7" to="0" wt="1"/>
+       <edge from="0" to="8" wt="1"/>
+       <edge from="8" to="0" wt="1"/>   
+       <edge from="0" to="9" wt="1"/>
+       <edge from="9" to="0" wt="1"/>
+</graph>

@@ -1,1 +1,11 @@
-Just testing
+1. Running simulation using XML input (example)
+
+from /src/ run python steels/steels_main.py -p "simulation.xml"
+
+run --help for more details
+
+2. Visualization of agents palettes (example)
+
+from /src/presenter run munsell_palette.py -d ../ -a 10 --findfocal strength_based -l t 
+
+run --help for more details

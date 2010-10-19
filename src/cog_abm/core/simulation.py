@@ -46,18 +46,19 @@ class Simulation(object):
 		n = len(self.agents)
 		
 		self.dump_results(0)
+
 		
 		for i in xrange(iterations):
 			if self.interaction.num_agents() == 2:
-#				a = random.choice(self.agents)
-#				b = self.graph.get_random_neighbour(a)
-#				r1, r2 = self.interaction.interact(a, b)
-#				a.add_inter_result(r1)
-#				b.add_inter_result(r2)
-				(a, b) = random.choice(self.graph.edges())
-				r1, r2 = self.interaction.interact(self.agents[a],  self.agents[b])
-				self.agents[a].add_inter_result(r1)
-				self.agents[b].add_inter_result(r2)
+				a = random.choice(self.agents)
+				b = self.graph.get_random_neighbour(a)
+				r1, r2 = self.interaction.interact(a, b)
+				a.add_inter_result(r1)
+				b.add_inter_result(r2)
+#				(a, b) = random.choice(self.graph.edges())
+#				r1, r2 = self.interaction.interact(self.agents[a],  self.agents[b])
+#				self.agents[a].add_inter_result(r1)
+#				self.agents[b].add_inter_result(r2)
 			else :
 				a = random.choice(self.agents)
 				r = self.interaction.interact(a)

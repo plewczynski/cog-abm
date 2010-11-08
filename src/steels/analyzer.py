@@ -178,7 +178,7 @@ def main():
 	if opts.chart is not None:
 		from presenter.charts import wykres
 		data = []
-		print wyn
+		#print wyn
 		map(lambda x: data.append((x[0], x[1:])), wyn)
 		wykres(data, opts.xlabel, opts.ylabel)
 		

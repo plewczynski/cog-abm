@@ -90,6 +90,8 @@ if __name__ == "__main__":
 			
 
 	if params["interaction_type"] == "DG":
+		print params
+		#r = steels_basic_experiment_DG
 		r = steels_basic_experiment_DG(**params)
 	elif params["interaction_type"] == "GG":
 		r = steels_basic_experiment_GG(**params)

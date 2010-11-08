@@ -12,7 +12,7 @@
 			<num_iter value="3000"/>
 			<context_size value="4"/>
 			<inc_category_treshold value="0.90"/>
-			<classifier name="SteelsClassifier"/>
+			<classifier name="FdaRealClassifier"/>
 		</params>
 	</interaction>
 

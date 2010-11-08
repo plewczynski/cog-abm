@@ -23,7 +23,9 @@ class SimpleStimulus(Stimulus):
 	
 	def __eq__(self, other):
 		return self.content == other.content
-
+	
+	def to_ML_data(self):
+		return self.content.to_ML_data()
 
 class VectorStimulus(SimpleStimulus):
 	"""

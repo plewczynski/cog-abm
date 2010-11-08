@@ -21,6 +21,7 @@ class SimplePerception(Perception):
 	
 	
 	def to_ML_data(self):
+		#print self.content
 		return self.content.to_ML_data()
 
 

@@ -24,21 +24,15 @@ class SingleSvmRealClassifier(object):
 		self.classifier = mlpy.Svm() # initialize Svm class
 		self.positives = []
 		self.negatives = []
-		self.etiquete_positives = []
-		self.etiquete_negatives = []
 		self.time_positives = []
 		self.time_negatives = []
 	
 	def train_svm(self):
 		"""
 		"""
-		##print 'train_svm'
 		svm = mlpy.Svm()
-		##print self.positives+self.negatives
-		##print self.etiquete_positives+self.etiquete_negatives
 		arr = np.array(self.positives+self.negatives)
 		etiq = np.array([1] * len(self.positives) + [-1] * len(self.negatives))
-		#print 'arr: ', arr, 'etiq: ', etiq
 		svm.compute(arr, etiq)
 		self.classifier = svm
 	
@@ -46,17 +40,14 @@ class SingleSvmRealClassifier(object):
 	def add_positives(self, new_pos):
 		"""
 		"""
-		##print self.positives, new_pos
 		self.positives = self.positives + new_pos
 		ones = [1] * len(new_pos)
-		self.etiquete_positives = self.etiquete_positives + ones
 		self.time_positives = self.time_positives + ones
 		
 		
 	def add_negatives(self, new_neg):
 		"""
 		"""
-		#print 'new_neg', new_neg
 		self.negatives = self.negatives + new_neg
 		min_ones = [-1] * len(new_neg)
 		ones = [1] * len(new_neg)
@@ -83,8 +74,6 @@ class SingleSvmRealClassifier(object):
 	
 	
 	def forgetting(self, threshold = 5):
-		#forget
-		#print 'forgetting singleClassifier'
 		self.time_positives = map(self._single_forgetting, self.time_positives)
 		self.time_negatives = map(self._single_forgetting, self.time_negatives)
 		#delete items that are too old
@@ -108,8 +97,6 @@ class SingleSvmRealClassifier(object):
 			self.time_negatives = list(time_negs)
 			self.negatives = list(negs)
 		
-		#print 'negatives forget: ', self.time_negatives, self.negatives
-		#print 'positives forget: ', self.time_positives, self.positives
 	
 	def _single_forgetting(self, a):
 		return a+1
@@ -147,9 +134,6 @@ class SvmRealClassifier(object):
 		#print singleClassifier.reaction(sample)
 				
 		self.categories[class_id] = singleClassifier
-		#self.display_memory()
-		#print 'added new category, its posi: ', self.categories[class_id].positives
-		#print 'added new category, its nega: ', self.categories[class_id].negatives
 		return class_id
 		
 	
@@ -173,26 +157,11 @@ class SvmRealClassifier(object):
 	
 	
 	def forgetting(self, threshold = 3):
-		cat = 0
-		#print 'forgetting: len(self.categories)', len(self.categories)
 		
 		for cat in self.categories:
 			self.categories[cat].forgetting()
 		
 		continuing = 0
-		#while 1:
-		#	for cat in self.categories:
-		#		if len(self.categories[cat].time_positives) == 0 or len(self.categories[cat].time_negatives) == 0:
-		#			print 'deleting:', self.categories[cat].time_positives, self.categories[cat].time_negatives
-		#			self.del_category(cat)
-		#			continuing = 1
-		#			print 'next cat forgotten', cat
-		#			break
-		#	if continuing == 1:
-		#		continuing = 0
-		#		continue
-		#	else:
-		#		break
 	
 	
 	def sample_strength(self, category_id, sample):
@@ -226,8 +195,6 @@ if __name__ == "__main__":
     #test_point = np.array([1, 2, 3])
     ##print svm.predict(test_point)
         
-    
-    
     sample = [1, 2, 3]
     a = [2, 3, 4]
     b = [3, 4, 5]

@@ -24,8 +24,6 @@ class SingleFdaRealClassifier(object):
 		self.classifier = mlpy.Fda(k) # initialize Fda class
 		self.positives = []
 		self.negatives = []
-		self.etiquete_positives = []
-		self.etiquete_negatives = []
 		self.time_positives = []
 		self.time_negatives = []
 		self.num_neigh = k
@@ -33,13 +31,9 @@ class SingleFdaRealClassifier(object):
 	def train_fda(self):
 		"""
 		"""
-		##print 'train_fda'
 		fda = mlpy.Fda(self.num_neigh)
-		##print self.positives+self.negatives
-		##print self.etiquete_positives+self.etiquete_negatives
 		arr = np.array(self.positives+self.negatives)
 		etiq = np.array([1] * len(self.positives) + [-1] * len(self.negatives))
-		#print 'arr: ', arr, 'etiq: ', etiq
 		fda.compute(arr, etiq)
 		self.classifier = fda
 	
@@ -47,21 +41,17 @@ class SingleFdaRealClassifier(object):
 	def add_positives(self, new_pos):
 		"""
 		"""
-		##print self.positives, new_pos
 		self.positives = self.positives + new_pos
 		ones = [1] * len(new_pos)
-		self.etiquete_positives = self.etiquete_positives + ones
 		self.time_positives = self.time_positives + ones
 		
 		
 	def add_negatives(self, new_neg):
 		"""
 		"""
-		#print 'new_neg', new_neg
 		self.negatives = self.negatives + new_neg
 		min_ones = [-1] * len(new_neg)
 		ones = [1] * len(new_neg)
-		self.etiquete_negatives = self.etiquete_negatives + min_ones
 		self.time_negatives = self.time_negatives + ones
 		
 		
@@ -84,8 +74,6 @@ class SingleFdaRealClassifier(object):
 	
 	
 	def forgetting(self, threshold = 5):
-		#forget
-		#print 'forgetting singleClassifier'
 		self.time_positives = map(self._single_forgetting, self.time_positives)
 		self.time_negatives = map(self._single_forgetting, self.time_negatives)
 		#delete items that are too old
@@ -108,9 +96,6 @@ class SingleFdaRealClassifier(object):
 			time_negs, negs = zip(*neg_zipped)
 			self.time_negatives = list(time_negs)
 			self.negatives = list(negs)
-		
-		#print 'negatives forget: ', self.time_negatives, self.negatives
-		#print 'positives forget: ', self.time_positives, self.positives
 	
 	def _single_forgetting(self, a):
 		return a+1
@@ -133,24 +118,17 @@ class FdaRealClassifier(object):
 			singleClassifier = SingleFdaRealClassifier()
 		
 		else:
-			#print 'old class_id', class_id
 			singleClassifier = self.categories[class_id]
 		
 		if sample is not None:
-			#print 'sample is not None', sample
 			singleClassifier.add_positives([sample])
 		
 		if context is not None:
-			#print 'context is not None', context
 			singleClassifier.add_negatives(context)
 		
 		singleClassifier.train_fda()
-		#print singleClassifier.reaction(sample)
 				
 		self.categories[class_id] = singleClassifier
-		#self.display_memory()
-		#print 'added new category, its posi: ', self.categories[class_id].positives
-		#print 'added new category, its nega: ', self.categories[class_id].negatives
 		return class_id
 		
 	
@@ -174,26 +152,9 @@ class FdaRealClassifier(object):
 	
 	
 	def forgetting(self, threshold = 3):
-		cat = 0
-		#print 'forgetting: len(self.categories)', len(self.categories)
 		
 		for cat in self.categories:
 			self.categories[cat].forgetting()
-		
-		continuing = 0
-		#while 1:
-		#	for cat in self.categories:
-		#		if len(self.categories[cat].time_positives) == 0 or len(self.categories[cat].time_negatives) == 0:
-		#			print 'deleting:', self.categories[cat].time_positives, self.categories[cat].time_negatives
-		#			self.del_category(cat)
-		#			continuing = 1
-		#			print 'next cat forgotten', cat
-		#			break
-		#	if continuing == 1:
-		#		continuing = 0
-		#		continue
-		#	else:
-		#		break
 	
 	
 	def sample_strength(self, category_id, sample):

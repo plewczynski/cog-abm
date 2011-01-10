@@ -1,8 +1,8 @@
-
-
+import sys
+sys.path.append('../')
 import unittest
 import random
-from steels_experiment import *
+from steels.steels_experiment import *
 
 class TestReactiveUnit(unittest.TestCase):
 	

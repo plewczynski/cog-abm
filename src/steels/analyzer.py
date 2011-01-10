@@ -36,7 +36,7 @@ cc_computed = {}
 def count_categ(agents, params, it):
 
 	global cc_computed
-	stimuli = params['stimuli']#stimuli = params['environments']['global'].stimuli
+	stimuli = params['environments']['global'].stimuli
 	
 	def pom(a):
 		Z = {}
@@ -180,6 +180,7 @@ def main():
 		data = []
 		#print wyn
 		map(lambda x: data.append((x[0], x[1:])), wyn)
+		print data
 		wykres(data, opts.xlabel, opts.ylabel)
 		
 	else:

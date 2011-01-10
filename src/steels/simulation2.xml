@@ -1,19 +1,18 @@
 <?xml version="1.0" ?>
 <simulation>
-	<history freq="1000"/>
-	<network source="graph2.xml"/>
+	<history freq="100"/>
+	<network source="graph_hub.xml"/>
 	<agents source="agent2.xml"/>
 
-	<interaction id="1" type="GuessingGame">
+	<interaction id="1" type="DiscriminationGame">
 		<params>
 			<alpha value="0.1"/>
 			<beta value="1"/>
 			<sigma value="1"/>
-			<num_iter value="3000"/>
+			<num_iter value="1000"/>
 			<context_size value="4"/>
 			<inc_category_treshold value="0.90"/>
-			<classifier name="SvmRealClassifier"/>
-			<svm_cost value="1.0"/>
+			<classifier name="SteelsClassifier"/>
 		</params>
 	</interaction>
 

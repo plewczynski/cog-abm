@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <simulation>
-	<history freq="1000"/>
+	<history freq="50"/>
 	<network source="graph2.xml"/>
 	<agents source="agent2.xml"/>
 
-	<interaction id="1" type="GuessingGame">
+	<interaction id="1" type="DiscriminatingGame">
 		<params>
 			<alpha value="0.1"/>
 			<beta value="1"/>
@@ -12,8 +12,7 @@
 			<num_iter value="3000"/>
 			<context_size value="4"/>
 			<inc_category_treshold value="0.90"/>
-			<classifier name="SvmRealClassifier"/>
-			<svm_cost value="1.0"/>
+			<classifier name="SteelsClassifier"/>
 		</params>
 	</interaction>
 

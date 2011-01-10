@@ -11,9 +11,10 @@ argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
 def_value = lambda v, defult: v and v or defult
-
-from ml_svmreal import *
-from ml_fdareal import *
+#ml classifiers from here:
+from cog_abm.ML.multi_classif import *
+from cog_abm.ML.direct_classif import *
+from cog_abm.ML.simple_classif import *
 
 class ReactiveUnit(object):
 	""" Reactive units are used in adaptive networks
@@ -145,7 +146,7 @@ class SteelsClassifier(object):
 		self.categories.pop(category_id, None)
 
 	
-	def classify(self,  elem):
+	def classify(self,  elem, context=None):
 		if len(self.categories) == 0:
 			return None
 		
@@ -188,16 +189,16 @@ class DiscriminationGame(object):
 	
 	
 	def disc_game(self, agent, context, topic):
-		
+
 		ctopic = agent.classify(topic)
-		
+
 		if ctopic is None:
 			pass
 			#not a  problem - count > 1 so it will add new category
-			
+
 		ccontext = [agent.classify(c) for c in context]
 		count = ccontext.count(ctopic)
-		
+
 		return (count == 1, ctopic)
 
 	
@@ -206,13 +207,11 @@ class DiscriminationGame(object):
 		succ_rate = DS_A(agent)
 		#print succ_rate
 		ml_topic = agent.sense(topic).to_ML_data()
-		ml_context = []
-		for i in range(0, len(context)):
-			ml_context = ml_context + [agent.sense(context[i]).to_ML_data()]
+		ml_context = map(lambda x:x.to_ML_data(), map(agent.sense, context))
 		
 		if succ:
 			# success
-			agent.state.classifier.incrase_samples_category(ml_topic)
+			agent.state.classifier.increase_samples_category(ml_context, ml_topic)
 		elif succ_rate >= self.inc_category_treshold:
 			#agent.state.incrase_samples_category(topic)
 			if ctopic is None:
@@ -292,7 +291,7 @@ class GuessingGame(object):
 			# z opisu w 4.3 pierwszy paragraf
 			
 			for a in [speaker, hearer]:
-				a.state.classifier.increase_samples_category(None, a.sense(topic).to_ML_data())
+				a.state.classifier.increase_samples_category(map(lambda x:x.to_ML_data(), map(a.sense, context)), a.sense(topic).to_ML_data())
 		else:
 
 			speaker.state.lexicon.decrease(sp_topic, word)
@@ -303,30 +302,30 @@ class GuessingGame(object):
 		
 
 	def guess_game(self, speaker, hearer):
-		
+
 		env = speaker.get_environment()
 		context = env.get_random_stimuli(self.disc_game.context_len)
-		
+
 		topic = random.choice(context)
-		
+
 		succ, spctopic = self.disc_game.play_save(speaker, context, topic)
 
 		if not succ:
 			self.disc_game.learning_after(speaker, topic, context, succ, spctopic)
 			return False
-		
+
 		f = speaker.state.word_for(spctopic)
 		if f is None:
 			f = speaker.state.lexicon.add_element(spctopic)
 
-		
+
 		#step 4
 		hcategory = hearer.state.category_for(f)
 #		print "hearers category for "+str(f)+" is "+str(hcategory)
-		
+
 		if hcategory is None:
 			#fail in game - hearer doesn't know the word f
-			
+
 			succ, hectopic = self.disc_game.play_save(hearer, context, topic)
 			#TODO Q: should hearer also learn?
 			if succ:
@@ -336,7 +335,7 @@ class GuessingGame(object):
 
 			else:
 				#print " i go nie dyskryminuje"
-				
+
 				#class_id = hearer.state.classifier.add_category(
 				#                                                hearer.sense(topic).to_ML_data())
 				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -345,21 +344,21 @@ class GuessingGame(object):
 				hearer.state.lexicon.add_element(class_id, f)
 
 			# disc_game samo stworzy ew kategorie?
-			
+
 			return False
-			
+
 
 		hsf = argmax(lambda c: hearer.state.sample_strength(hcategory, 
 												hearer.sense(c)), context)[1]
-		
+
 		#step 6
-		
+
 		succ = hsf == topic
 		hectopic = hearer.classify(hsf)
 		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
 #		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
 		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic, context)
-		
+
 		return succ
 		
 
@@ -371,15 +370,15 @@ class GuessingGame(object):
 
 #class SteelsAgentState(AgentState):
 class SteelsAgentState(object):
-	
+
 	def __init__(self, classifier):
 		self.classifier = classifier
-	
-	
+
+
 	def classify(self, sample):
 		return self.classifier.classify(sample.to_ML_data())
-	
-	
+
+
 	def sample_strength(self, category, sample):
 		return self.classifier.sample_strength(category, sample.to_ML_data())
 
@@ -403,15 +402,6 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 	def word_for(self, category):
 		return self.lexicon.word_for(category)
 
-def convert_to_classifier(classifier):
-	if classifier == 'SvmRealClassifier':
-		return SvmRealClassifier
-	if classifier == 'SteelsClassifier':
-		return SteelsClassifier
-	if classifier == 'KnnRealClassifier':
-		return KnnRealClassifier
-	if classifier == 'FdaRealClassifier':
-		return FdaRealClassifier
 
 def default_stimuli():
 	from cog_abm.stimuli.stimulus import SimpleStimulus
@@ -469,7 +459,7 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 
 def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None, 
 			environments = None, interaction_type="DG", beta = 1., context_size = 4,
-			num_agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None, stimuli = None):
+			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None, stimuli = None):
 	
 	sys.path.append("../")
 	from cog_abm.core.agent import Agent
@@ -482,12 +472,12 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 	from cog_abm.core.simulation import Simulation
 	
 	environments = def_value(environments, {})
-	agents = [Agent()] * num_agents#def_value(agents, [])
-	print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
-	classifier = convert_to_classifier(classifier)
+	#agents = [Agent()] * num_agents#
+	def_value(agents, [])
+	classifier, classif_arg = convert_to_classifier_steels(classifier)
 	#niestety narazie tak 
 	for agent in agents:
-		agent.set_state(SteelsAgentStateWithLexicon(classifier()))
+		agent.set_state(SteelsAgentStateWithLexicon(classifier(classif_arg)))
 		agent.set_sensor(SimpleSensor())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
@@ -517,13 +507,16 @@ def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None,
 	
 	environments = def_value(environments, {})
 	agents = def_value(agents, [])
-	print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
-	classifier = convert_to_classifier(classifier)
+	#print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
+	classifier, classif_arg = convert_to_classifier_steels(classifier)
 	#agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
 
 	#niestety narazie tak 
 	for agent in agents:
-		agent.set_state(SteelsAgentStateWithLexicon(classifier()))
+		if classif_arg == None:
+			agent.set_state(SteelsAgentStateWithLexicon(classifier()))
+		else:
+			agent.set_state(SteelsAgentStateWithLexicon(classifier(classif_arg)))
 		agent.set_sensor(SimpleSensor())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
@@ -589,7 +582,7 @@ def old_steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = N
 	
 	classifier = def_value(classifier, SteelsClassifier)
 	
-	agents = [Agent(SteelsAgentState(classifier()), SimpleSensor()) \
+	agents = [Agent(SteelsAgentState(classifier(classif_arg)), SimpleSensor()) \
 												for _ in xrange(num_agents)]
 	
 	
@@ -633,6 +626,10 @@ def old_steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = N
 						GuessingGame(None, context_size), topology = topology, 
 						dump_freq = dump_freq)
 
-
-
+def convert_to_classifier_steels(classifier):
+    print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
+    if classifier == "SteelsClassifier":
+        return SteelsClassifier, None
+    else:
+        return  convert_to_classifier(classifier)
 

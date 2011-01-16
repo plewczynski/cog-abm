@@ -11,10 +11,13 @@ argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
 def_value = lambda v, defult: v and v or defult
+
 #ml classifiers from here:
 from cog_abm.ML.multi_classif import *
 from cog_abm.ML.direct_classif import *
-from cog_abm.ML.simple_classif import *
+from cog_abm.ML.conv_classif_str import *
+#concrete ML classifiers - add NEW implementation imports here:
+from cog_abm.ML.simple_classif_mlpy import *
 
 class ReactiveUnit(object):
 	""" Reactive units are used in adaptive networks
@@ -126,7 +129,7 @@ class SteelsClassifier(object):
 		self.new_category_id = 0
 	
 	
-	def add_category(self, sample = None, context = None, class_id = None):
+	def add_category(self, sample = None, class_id = None):
 		if class_id is None:
 			class_id = self.new_category_id
 			self.new_category_id += 1
@@ -146,7 +149,7 @@ class SteelsClassifier(object):
 		self.categories.pop(category_id, None)
 
 	
-	def classify(self,  elem, context=None):
+	def classify(self,  elem):
 		if len(self.categories) == 0:
 			return None
 		
@@ -154,7 +157,7 @@ class SteelsClassifier(object):
 		           lambda kr: kr[1].reaction(elem))[0]
 	
 	
-	def increase_samples_category(self, context, sample):
+	def increase_samples_category(self, sample):
 		category_id = self.classify(sample)
 		self.categories[category_id].increase_sample(sample)
 	
@@ -166,6 +169,15 @@ class SteelsClassifier(object):
 	
 	def sample_strength(self, category_id, sample):
 		return self.categories[category_id].reaction(sample)
+
+
+def convert_to_classifier_steels(classifier):
+    #print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
+    if classifier == "SteelsClassifier":
+        return SteelsClassifier, None
+    else:
+        return  convert_to_classifier(classifier)
+
 
 from cog_abm.extras.metrics import DS_A
 #TODO: poprawic dziedziczenie
@@ -202,25 +214,23 @@ class DiscriminationGame(object):
 		return (count == 1, ctopic)
 
 	
-	def learning_after(self, agent, topic, context, succ, ctopic = None):
+	def learning_after(self, agent, topic, succ, ctopic = None):
 
 		succ_rate = DS_A(agent)
 		#print succ_rate
 		ml_topic = agent.sense(topic).to_ML_data()
-		ml_context = map(lambda x:x.to_ML_data(), map(agent.sense, context))
 		
 		if succ:
 			# success
-			agent.state.classifier.increase_samples_category(ml_context, ml_topic)
+			agent.state.classifier.increase_samples_category(ml_topic)
 		elif succ_rate >= self.inc_category_treshold:
 			#agent.state.incrase_samples_category(topic)
 			if ctopic is None:
 				ctopic = agent.state.classifier.classify(ml_topic)
-			#print "ml_topic: ", ml_topic, "ml_context: ", ml_context
-			agent.state.classifier.add_category(ml_topic,  ml_context, ctopic)
+			agent.state.classifier.add_category(ml_topic, ctopic)
 
 		else:
-			agent.state.classifier.add_category(ml_topic, ml_context)
+			agent.state.classifier.add_category(ml_topic)
 		
 		# lower streanght of memory - jak kolwiek to sie pisze
 		agent.state.classifier.forgetting()
@@ -231,7 +241,7 @@ class DiscriminationGame(object):
 		succ, ctopic = \
 				self.disc_game(agent, context, topic)
 		
-		self.learning_after(agent, topic, context, succ, ctopic)
+		self.learning_after(agent, topic, succ, ctopic)
 		
 		return succ, ctopic, topic, context
 	
@@ -260,10 +270,6 @@ class DiscriminationGame(object):
 		succ2, _, _, _ = self.play_with_learning(agent2, context, topic)
 		return (("DG", succ1), ("DG", succ2))
 
-def adda(a):
-    return a+1
-
-
 
 #from cog_abm.agent.state import AgentState
 
@@ -284,21 +290,21 @@ class GuessingGame(object):
 
 	
 
-	def learning_after(self, speaker, hearer, succ, sp_topic, he_topic, word, topic, context):
+	def learning_after(self, speaker, hearer, succ, sp_topic, he_topic, word, topic):
 		if succ:
 			speaker.state.lexicon.increase_word(sp_topic, word)
 			hearer.state.lexicon.increase_category(he_topic, word)
 			# z opisu w 4.3 pierwszy paragraf
 			
 			for a in [speaker, hearer]:
-				a.state.classifier.increase_samples_category(map(lambda x:x.to_ML_data(), map(a.sense, context)), a.sense(topic).to_ML_data())
+				a.state.classifier.increase_samples_category(a.sense(topic).to_ML_data())
 		else:
 
 			speaker.state.lexicon.decrease(sp_topic, word)
 			hearer.state.lexicon.decrease(he_topic, word)
 			#domniemania z punktu 6 w ostatnim podrozdziale 2
 			#hearer.state.classifier
-			self.disc_game.learning_after(hearer, topic, context, False)
+			self.disc_game.learning_after(hearer, topic, False)
 		
 
 	def guess_game(self, speaker, hearer):
@@ -311,7 +317,7 @@ class GuessingGame(object):
 		succ, spctopic = self.disc_game.play_save(speaker, context, topic)
 
 		if not succ:
-			self.disc_game.learning_after(speaker, topic, context, succ, spctopic)
+			self.disc_game.learning_after(speaker, topic, succ, spctopic)
 			return False
 
 		f = speaker.state.word_for(spctopic)
@@ -339,7 +345,7 @@ class GuessingGame(object):
 				#class_id = hearer.state.classifier.add_category(
 				#                                                hearer.sense(topic).to_ML_data())
 				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-				self.disc_game.learning_after(hearer, topic, context, succ, hectopic)
+				self.disc_game.learning_after(hearer, topic, succ, hectopic)
 				class_id = hearer.classify(topic)
 				hearer.state.lexicon.add_element(class_id, f)
 
@@ -357,7 +363,7 @@ class GuessingGame(object):
 		hectopic = hearer.classify(hsf)
 		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
 #		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
-		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic, context)
+		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
 
 		return succ
 		
@@ -625,11 +631,4 @@ def old_steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = N
 	return old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, 
 						GuessingGame(None, context_size), topology = topology, 
 						dump_freq = dump_freq)
-
-def convert_to_classifier_steels(classifier):
-    print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
-    if classifier == "SteelsClassifier":
-        return SteelsClassifier, None
-    else:
-        return  convert_to_classifier(classifier)
 

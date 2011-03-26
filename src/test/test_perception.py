@@ -13,9 +13,14 @@ class TestColor(unittest.TestCase):
 		"""
 		
 		perc = Perception()
-		
-		
+		self.assertEqual(None, perc.predefinied_category)
 		self.assertEqual(isinstance(perc, Perception), True)
+		vp = VectorPerception([1, 2, 3])
+		print dir(vp)
+		self.assertEqual(None,  vp.predefinied_category)
+		vp.predefinied_category = 1
+		self.assertEqual(1, vp.predefinied_category)
+
 		
 	def test_init_perceptionColor(self):
 		"""
@@ -26,12 +31,12 @@ class TestColor(unittest.TestCase):
 		L = random.random()
 		a = random.randint(0, 255)
 		b = random.randint(0, 255)        
-		col = Color([L, a, b])
-		per_col = PerceptionColor(col)
-		self.assertEqual(per_col.color, col)
-		self.assertEqual(per_col.color.content, [L, a, b])
+		col = Color(L, a, b)
+		per_col = SimplePerception(col)
+		self.assertEqual(per_col.content, col)
+		self.assertEqual(per_col.content.to_ML_data(), [L, a, b])
+		self.assertEqual(isinstance(per_col, SimplePerception), True)
 		self.assertEqual(isinstance(per_col, Perception), True)
-		self.assertEqual(isinstance(per_col, PerceptionColor), True)
 	
 if __name__ == '__main__':
     unittest.main()

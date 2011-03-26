@@ -2,7 +2,7 @@
 Module implementing agent in our system
 """
 
-from cog_abm.core.simulation import Simulation
+from simulation import Simulation
 
 class Agent(object):
 	"""

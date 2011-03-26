@@ -1,8 +1,8 @@
-import sys
-sys.path.append('../')
+
+
 import unittest
 import random
-from steels.steels_experiment import *
+from steels_experiment import *
 
 class TestReactiveUnit(unittest.TestCase):
 	
@@ -104,7 +104,7 @@ class TestAdaptiveNetwork(unittest.TestCase):
 	def test_incrase_sample(self):
 		for ru,  _ in self.sample:
 			an = AdaptiveNetwork(self.sample)
-			an.incrase_sample(ru.central_value)
+			an.increase_sample(ru.central_value)
 			wwan = (an.units[an._index_of(ru)])[1]
 			
 			for wewru, weww in self.sample:
@@ -115,8 +115,7 @@ class TestAdaptiveNetwork(unittest.TestCase):
 	
 	def test_forgetting(self):#TODO ustawic odpowiednia wartosc
 		an = AdaptiveNetwork(self.sample)
-		alpha = random.random()
-		an.forgetting(alpha)
+		an.forgetting()
 
 		for ru, w in an.units:
 			for ruw,  ww in self.sample:
@@ -127,23 +126,20 @@ class TestAdaptiveNetwork(unittest.TestCase):
 
 
 class TestSteelsClassifier(unittest.TestCase):
-	
-	
-	def setUp(self):
-		self.N = 100
-		self.samples = [[1, 2, 3, 4],  [1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]
-		self.ru = [ReactiveUnit(s) for s in self.samples]
-		
+
+    def setUp(self):
+        self.N = 100
+        self.samples = [[1, 2, 3, 4],  [1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]
+        self.ru = [ReactiveUnit(s) for s in self.samples]
+
 
 
 	def _init(self):
 		self.sc = SteelsClassifier()
-		for i, s in enumerate(self.ru):
-			an = AdaptiveNetwork()
-			an.add_reactive_unit(s)
-			self.sc.add_category(i, an)
-	
-	
+		for s in self.samples:
+			self.sc.add_catergory(s)
+
+
 	def test_add_category(self):
 		pass
 	

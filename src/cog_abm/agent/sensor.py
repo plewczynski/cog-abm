@@ -1,8 +1,9 @@
 from cog_abm.stimuli.perception import SimplePerception
 
 class Sensor(object):
-	""" Basic sensor.
-	"""
+    """ Basic sensor.
+    """
+    pass
 
 class SimpleSensor(Sensor):
 	""" Just gives back what he got """

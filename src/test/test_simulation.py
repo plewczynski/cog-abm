@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 import unittest
-from core.simulation import *
+from cog_abm.core.simulation import *
 
 
 class TestSimulation(unittest.TestCase):

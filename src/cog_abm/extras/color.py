@@ -4,6 +4,7 @@ the Stimulus' interfaces.
 """
 
 import math
+from itertools import izip
 
 class Color(object):
 	"""
@@ -31,7 +32,7 @@ class Color(object):
 
 
 	def distance(self, other):
-		l = zip(self.to_ML_data(), other.to_ML_data())
+		l = izip(self.to_ML_data(), other.to_ML_data())
 		return math.sqrt(math.fsum([(x-y)**2 for x, y in l]))
 	
 	

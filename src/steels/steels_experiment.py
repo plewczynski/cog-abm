@@ -6,18 +6,11 @@ import sys
 import random
 sys.path.append("../")
 
-from itertools import imap, izip, izip_longest
-argmax = lambda funct, items: max(izip(imap(funct, items), items))
-argmin = lambda funct, items: min(izip(imap(funct, items), items))
+from cog_abm.extras.tools import *
 
-def_value = lambda v, defult: v and v or defult
 
-#ml classifiers from here:
-from cog_abm.ML.multi_classif import *
-from cog_abm.ML.direct_classif import *
 from cog_abm.ML.conv_classif_str import *
-#concrete ML classifiers - add NEW implementation imports here:
-from cog_abm.ML.simple_classif_mlpy import *
+
 
 class ReactiveUnit(object):
 	""" Reactive units are used in adaptive networks

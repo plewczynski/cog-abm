@@ -1,6 +1,6 @@
 #import math
 from simple_classif import *
-from cog_abm.extras.abstract_meth import *
+from ..extras.tools import *
 #MLPY classifiers:
 import numpy as np
 import mlpy

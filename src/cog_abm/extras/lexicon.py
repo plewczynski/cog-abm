@@ -1,8 +1,8 @@
 import random
 
 from itertools import imap, izip, groupby
-argmax = lambda funct, items: max(izip(imap(funct, items), items))
-argmin = lambda funct, items: min(izip(imap(funct, items), items))
+from tools import *
+
 
 class Syllable:
 	

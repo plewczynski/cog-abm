@@ -1,14 +1,7 @@
 import math
-import sys
 import random
-sys.path.append("../")
-from cog_abm.extras.abstract_meth import *
+from ..extras.tools import *
 
-from itertools import imap, izip, izip_longest
-argmax = lambda funct, items: max(izip(imap(funct, items), items))
-argmin = lambda funct, items: min(izip(imap(funct, items), items))
-
-def_value = lambda v, default: v and v or default
 
 #Giving the wrapped classifier methods for management of datapoints
 

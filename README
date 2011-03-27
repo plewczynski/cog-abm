@@ -84,11 +84,11 @@ Options:
 * Example of full “usage path”:
 --------------------------------------- 
 
-Run simulation. From /src/ run:
-python steels/steels_main.py -p "simulation.xml" 
+Run simulation. From /src/steels run:
+python steels_main.py -p "simulation.xml" 
 
 now see result in chart:
-python steels/analyzer.py -f *.result -c it DS CS --xlabel="iteration" --ylabel "discriminative success & communicative success"
+python analyzer.py -f *.result -c it DS CS --xlabel="iteration" --ylabel "discriminative success & communicative success"
 
 to see categorization:
 from /src/presenter run:

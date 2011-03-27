@@ -17,7 +17,7 @@
 		</params>
 	</interaction>
 
-	<environment name="global" source="cog_abm/extras/1269_munsell_chips.xml">
+	<environment name="global" source="../cog_abm/extras/1269_munsell_chips.xml">
 		<params>
 			<distance value="45"/>
 		</params>

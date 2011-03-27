@@ -1,7 +1,6 @@
 import sys
-sys.path.append("../")
 #from abstract_meth import *
-from cog_abm.extras.abstract_meth import *
+from ..extras.tools import *
 
 class SimpleClassifier(object):
 	"""A base class for a single classifier. This class should be a base for each wrapper of an ML library function.

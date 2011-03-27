@@ -42,8 +42,6 @@ class Simulation(object):
 		start_time = time()
 		logging.info("Simulation start...")
 		
-
-		n = len(self.agents)
 		
 		self.dump_results(0)
 
@@ -75,5 +73,7 @@ class Simulation(object):
 			
 
 	
+#	def continue_experiment(self, iterations = 1000, dump_freq = 10):
+		
 
 	

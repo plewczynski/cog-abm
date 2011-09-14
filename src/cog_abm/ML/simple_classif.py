@@ -1,5 +1,3 @@
-import sys
-#from abstract_meth import *
 from ..extras.tools import *
 
 class SimpleClassifier(object):

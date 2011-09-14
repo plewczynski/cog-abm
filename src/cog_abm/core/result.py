@@ -3,7 +3,6 @@ Module provides class for handling and gathering experiment results.
 """
 import cPickle
 import pprint
-from random import choice
 
 
 class ResultHandler(object):
@@ -25,6 +24,7 @@ class ResultHandler(object):
 		It can be parallel (default) or sequence.
 		"""
 		self.results = []
+		
 	
 	def add_result(self, result):
 		"""
@@ -35,6 +35,7 @@ class ResultHandler(object):
 		@param result: Result of any type operation.
 		"""
 		self.save(result)
+		
 	
 	def export_to_file(self, destination):
 		"""
@@ -54,6 +55,7 @@ class ResultHandler(object):
 					pp.pprint(result.results)
 			else:
 				pp.pprint(self.results)
+				
 			
 	def get_results(self):
 		"""
@@ -63,6 +65,7 @@ class ResultHandler(object):
 		@return: List of collected results.
 		"""
 		return self.results
+	
 	
 	def pickle(self, destination):
 		"""
@@ -74,6 +77,7 @@ class ResultHandler(object):
 		with open(destination, 'w') as file:
 			cPickle.dump(self.results, file)
 			
+			
 	def save(self, result):
 		"""
 		Save result of one operation to the set of results.
@@ -82,6 +86,7 @@ class ResultHandler(object):
 		@param result: Result of any type operation.
 		"""
 		self.results.append(result)
+		
 
 	def unpickle(self, source):
 		"""
@@ -92,8 +97,11 @@ class ResultHandler(object):
 		"""
 		with open(source, 'r') as file:
 			self.results = cPickle.load(file)
+			
+			
 
 class ParallelResultHandler(ResultHandler):
-	def add_result(self):
-		#TODO: zapewnienie dostepu do wspoldzielonych zasobow
-		self.save(result)	
+	
+	#TODO: Think if this is really needed
+	pass
+

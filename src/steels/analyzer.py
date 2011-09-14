@@ -136,7 +136,8 @@ def main():
 
 
 
-	log_level = logging.DEBUG # default logging.WARNING
+	log_level = logging.INFO #logging.DEBUG # default logging.WARNING
+
 
 	if opts.verbose == 1:
 		log_level = logging.INFO
@@ -190,4 +191,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+	main()

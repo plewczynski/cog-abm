@@ -14,12 +14,11 @@ from steels.steels_experiment import *
 from time import time
 from cog_abm.stimuli.stimulus import SimpleStimulus
 
-from itertools import imap, izip
 argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
 def str2bool(v):
-  return v.lower() in ["yes", "true", "t", "y", "1"]
+    return v.lower() in ["yes", "true", "t", "y", "1"]
 
 CELLAR_SPACE = 1
 CELLAR_SIZE = 15
@@ -528,7 +527,7 @@ class MunsellPaletteInterface(object):
 	def init_wcs_template(self):
 		self.stimuli = get_WCS_colors()
 		for color in self.stimuli:
-			r, g, b, a = self.convert_to_RGB(color)
+			r, g, b, _ = self.convert_to_RGB(color)
 			self.colors.append(gtk.gdk.Color(r, g, b))
 
 		#print [self.stimuli[j].distance(self.stimuli[j+1]) for j in xrange(len(self.stimuli)-2)]

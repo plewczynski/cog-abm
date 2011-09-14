@@ -14,7 +14,7 @@ class TestEnvironment(unittest.TestCase):
 		"""
 		set = range(10)
 		env = Environment(set)
-		for i in range(100):
+		for _ in range(100):
 			self.assertTrue(env.get_random_stimulus() in set)
 			
 	def test_get_all_stimuli(self):
@@ -27,4 +27,5 @@ class TestEnvironment(unittest.TestCase):
 	
 
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
+	

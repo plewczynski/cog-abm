@@ -1,11 +1,13 @@
+"""
+Module with usefull functions and constants
+"""
 
 from itertools import imap, izip
-
 
 argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
 
-def_value = lambda v, default: v and v or default
+def_value = lambda v, default: v or default
 
 
 def abstract():

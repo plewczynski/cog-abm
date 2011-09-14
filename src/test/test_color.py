@@ -26,7 +26,7 @@ class TestColor(unittest.TestCase):
 		"""
 		similar color
 		"""
-		for i in xrange(20):
+		for _ in xrange(20):
 			L = random.randint(0, 100)
 			a = random.randint(-255, 255)
 			b = random.randint(-255, 255)
@@ -40,4 +40,5 @@ class TestColor(unittest.TestCase):
 
 	
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
+	

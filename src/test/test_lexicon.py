@@ -8,7 +8,7 @@ class TestLexicon(unittest.TestCase):
 	
 	def setUp(self):
 		self.words = []
-		for i in xrange(10):
+		for _ in xrange(10):
 			self.words.append(Word.get_random_not_in(self.words))
 	
 	
@@ -36,4 +36,5 @@ class TestLexicon(unittest.TestCase):
 	
 	
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
+	

@@ -7,20 +7,6 @@ from cog_abm.extras.color import Color
 
 class TestColor(unittest.TestCase):
 	
-	def test_init_perception(self):
-		"""
-		Test of giving random content to the color instance.
-		"""
-		
-		perc = Perception()
-		self.assertEqual(None, perc.predefinied_category)
-		self.assertEqual(isinstance(perc, Perception), True)
-		vp = VectorPerception([1, 2, 3])
-		print dir(vp)
-		self.assertEqual(None,  vp.predefinied_category)
-		vp.predefinied_category = 1
-		self.assertEqual(1, vp.predefinied_category)
-
 		
 	def test_init_perceptionColor(self):
 		"""
@@ -30,7 +16,7 @@ class TestColor(unittest.TestCase):
 		random.seed()
 		L = random.random()
 		a = random.randint(0, 255)
-		b = random.randint(0, 255)        
+		b = random.randint(0, 255)
 		col = Color(L, a, b)
 		per_col = SimplePerception(col)
 		self.assertEqual(per_col.content, col)

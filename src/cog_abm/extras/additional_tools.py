@@ -20,7 +20,7 @@ def generate_simple_network(agents):
     
 
 def generate_network_with_agents(n):
-    agents = [Agent(id=i) for i in xrange(n)]
+    agents = [Agent(aid=i) for i in xrange(n)]
     return (generate_simple_network(agents), agents)
 
 

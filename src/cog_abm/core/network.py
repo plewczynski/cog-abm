@@ -1,7 +1,6 @@
 """
 Module represents agent allocation in cognitive system.
 """
-from pygraph.classes.graph import graph
 from random import choice
 
 class Node(object):
@@ -28,6 +27,7 @@ class Node(object):
 		self.agents = []
 		if (agents is not None):
 			self.agents.append(agents)
+			
 				
 	def __len__(self):
 		"""
@@ -38,6 +38,7 @@ class Node(object):
 		"""
 		return len(self.agents)
 		
+		
 	def add_agent(self, agent):
 		"""
 		Add agent to the node.
@@ -47,6 +48,7 @@ class Node(object):
 		"""
 		self.agents.append(agent)
 		
+		
 	def get_agents(self):
 		"""
 		Return all agents assigned to this node.
@@ -55,6 +57,7 @@ class Node(object):
 		@return: Return list of agents.
 		"""
 		return self.agents
+		
 		
 		
 class Network(object):
@@ -82,6 +85,7 @@ class Network(object):
 		for node in self.graph.nodes():
 			self.nodes[node] = Node(node)
 			
+			
 	def __len__(self):
 		"""
 		Return number of nodes in this network.
@@ -90,6 +94,7 @@ class Network(object):
 		@return: Number of nodes.
 		"""
 		return len(self.nodes)
+	
 	
 	#UNCOMMENT jezeli zmieniamy ze agent moze nalezec do kilku wezlow
 	# wtedy moze pojawic sie problem ze slownikiem ?
@@ -132,6 +137,7 @@ class Network(object):
 		else:
 			self.agents[agent_name] = node_name
 		
+		
 	def get_neighbour_nodes(self, node_name):
 		"""
 		Return list of node names that are adjacent to the given node.
@@ -144,6 +150,7 @@ class Network(object):
 		"""
 		return self.graph.neighbors(node_name)
 	
+	
 	def get_random_neighbour(self, agent_name):
 		"""
 		Return randomly chosen neighbour agent to the given agent.
@@ -155,6 +162,7 @@ class Network(object):
 		@param: Agents that is adjacent to the given agent.
 		"""
 		return choice(self.get_random_neighbours(agent_name))
+		
 		
 	def get_random_neighbours(self, agent_name):
 		"""

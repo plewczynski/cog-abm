@@ -41,7 +41,7 @@ class TestStatisticPolicy(unittest.TestCase):
 		policy = self._prepare_policy()
 
 		il = 0
-		for i in xrange(100):
+		for _ in xrange(100):
 			if policy.get_action(self.category) == self.special_action:
 				il+= 1
 
@@ -61,7 +61,7 @@ class TestStatisticPolicy(unittest.TestCase):
 	
 	def test_random(self):
 		policy = self._prepare_policy()
-		for i in xrange(1000):
+		for _ in xrange(1000):
 			if policy.get_action(self.category) != self.special_action:
 				return
 		
@@ -71,5 +71,5 @@ class TestStatisticPolicy(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
-   
+	unittest.main()
+

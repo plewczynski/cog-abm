@@ -3,9 +3,11 @@ Module providing flow control in simulation
 """
 import random
 import logging
+from itertools import izip
 from time import time
 import copy
 import cPickle
+
 
 
 class Simulation(object):
@@ -26,11 +28,35 @@ class Simulation(object):
 
 	def dump_results(self, iter_num):
 		cc = copy.deepcopy(self.agents)
+		#cc = [a.deepcopy() for a in self.agents]
 		kr = (iter_num, cc)
 		self.statistic.append(kr)
 		f = open(str(iter_num)+".pout", "wb")
 		cPickle.dump(kr, f)
 		f.close()
+	
+	
+	def _choose_agents(self):
+		if self.interaction.num_agents() == 2:
+			l = random.randint(0, len(self.agents)-1)
+			a = self.agents[l]
+			b = self.graph.get_random_neighbour(a)
+			return [a,b]
+		else :
+			return [random.choice(self.agents)]
+		
+	
+	def _start_interaction(self, agents):
+		results = self.interaction.interact(*agents)
+		for r, a in izip(results, agents):
+			a.add_inter_result(r)
+
+	
+	def _do_iterations(self, num_iter):
+		for _ in xrange(num_iter):
+			agents = self._choose_agents()
+			self._start_interaction(agents)
+
 		
 
 	def run(self, iterations = 1000, dump_freq = 10):
@@ -42,31 +68,11 @@ class Simulation(object):
 		start_time = time()
 		logging.info("Simulation start...")
 		
-		
 		self.dump_results(0)
 
-		
-		for i in xrange(iterations):
-			if self.interaction.num_agents() == 2:
-				a = random.choice(self.agents)
-				b = self.graph.get_random_neighbour(a)
-				r1, r2 = self.interaction.interact(a, b)
-				a.add_inter_result(r1)
-				b.add_inter_result(r2)
-#				(a, b) = random.choice(self.graph.edges())
-#				r1, r2 = self.interaction.interact(self.agents[a],  self.agents[b])
-#				self.agents[a].add_inter_result(r1)
-#				self.agents[b].add_inter_result(r2)
-			else :
-				a = random.choice(self.agents)
-				r = self.interaction.interact(a)
-				a.add_inter_result(r)
-				
-			
-			if (i+1) % dump_freq == 0:
-				self.dump_results(i+1)
-				
-		
+		for i in xrange(iterations//dump_freq):
+			self._do_iterations(dump_freq)
+			self.dump_results((i+1)*dump_freq)
 		
 		logging.info("Simulation end. Total time: "+str(time()-start_time))
 		return self.statistic
@@ -74,6 +80,3 @@ class Simulation(object):
 
 	
 #	def continue_experiment(self, iterations = 1000, dump_freq = 10):
-		
-
-	

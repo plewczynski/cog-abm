@@ -126,11 +126,11 @@ class TestAdaptiveNetwork(unittest.TestCase):
 
 
 class TestSteelsClassifier(unittest.TestCase):
-
-    def setUp(self):
-        self.N = 100
-        self.samples = [[1, 2, 3, 4],  [1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]
-        self.ru = [ReactiveUnit(s) for s in self.samples]
+	
+	def setUp(self):
+		self.N = 100
+		self.samples = [[1, 2, 3, 4],  [1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]
+		self.ru = [ReactiveUnit(s) for s in self.samples]
 
 
 

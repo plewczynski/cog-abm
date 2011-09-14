@@ -1,7 +1,7 @@
 import random
 
-from itertools import imap, izip, groupby
 from tools import *
+from itertools import groupby
 
 
 class Syllable:
@@ -55,12 +55,12 @@ class Word(object):
 	
 	@staticmethod
 	def set_max_len(n):
-		max_len = n
+		Word.max_len = n
 		
 	@staticmethod
 	def get_random():
 		i = random.randint(1,Word.max_len)
-		return Word([Syllable.get_random() for i in range(i)])
+		return Word([Syllable.get_random() for _ in xrange(i)])
 		#return repr([Syllable.get_random() for i in range(i)])
 		
 		

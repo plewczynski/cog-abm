@@ -46,7 +46,8 @@ class ReactiveUnit(object):
 
 	def dist(self, other):
 		return math.sqrt(math.fsum([(m-mp)**2 for m, mp in \
-			izip_longest(self.central_value, other.central_value, fillvalue=0.)]))
+			izip(self.central_value, other.central_value, fillvalue=0.)]))
+			#izip_longest(self.central_value, other.central_value, fillvalue=0.)]))
 	
 	
 
@@ -165,11 +166,11 @@ class SteelsClassifier(object):
 
 
 def convert_to_classifier_steels(classifier):
-    #print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
-    if classifier == "SteelsClassifier":
-        return SteelsClassifier, None
-    else:
-        return  convert_to_classifier(classifier)
+	#print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
+	if classifier == "SteelsClassifier":
+		return SteelsClassifier, []
+	else:
+		return  convert_to_classifier(classifier)
 
 
 from cog_abm.extras.metrics import DS_A
@@ -416,15 +417,10 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 			classifier = SteelsClassifier, topology = None, 
 			inc_category_treshold = None, dump_freq = 50, stimuli = None):
 				
-	sys.path.append("../")
-	from cog_abm.core.agent import Agent
-	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
+	from cog_abm.core import *
 	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
 	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.core.simulation import Simulation
+#	from cog_abm.core.simulation import Simulation
 
 
 	num_agents = len(agents)
@@ -460,23 +456,17 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 			environments = None, interaction_type="DG", beta = 1., context_size = 4,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None, stimuli = None):
 	
-	sys.path.append("../")
-	from cog_abm.core.agent import Agent
+	from cog_abm.core import *
 	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
-	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.core.simulation import Simulation
 	
 	environments = def_value(environments, {})
 	#agents = [Agent()] * num_agents#
 	def_value(agents, [])
 	classifier, classif_arg = convert_to_classifier_steels(classifier)
+
 	#niestety narazie tak 
 	for agent in agents:
-		agent.set_state(SteelsAgentStateWithLexicon(classifier(classif_arg)))
+		agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
@@ -493,17 +483,8 @@ def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None,
 			environments = None, interaction_type="GG", beta = 1., context_size = 4,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
 	
-	sys.path.append("../")
-	
-	from cog_abm.core.agent import Agent
 	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
-	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.core.simulation import Simulation
-	
+
 	environments = def_value(environments, {})
 	agents = def_value(agents, [])
 	#print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
@@ -534,13 +515,8 @@ def old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, interaction
 			inc_category_treshold = None, dump_freq = 50):
 				
 	sys.path.append("../")
-	from cog_abm.core.agent import Agent
-	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
 	from pygraph.algorithms.generators import generate
 	from cog_abm.core.environment import Environment
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
 	from cog_abm.core.simulation import Simulation
 
 
@@ -571,12 +547,7 @@ def old_steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = N
 	sys.path.append("../")
 	from cog_abm.core.agent import Agent
 	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
-	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.core.simulation import Simulation
+
 	
 	
 	classifier = def_value(classifier, SteelsClassifier)
@@ -601,19 +572,13 @@ def old_steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = N
 	sys.path.append("../")
 	from cog_abm.core.agent import Agent
 	from cog_abm.agent.sensor import SimpleSensor
-	from pygraph.classes.graph import graph
-	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
-	from cog_abm.stimuli.stimulus import SimpleStimulus
-	from cog_abm.extras.color import Color
-	from cog_abm.core.simulation import Simulation
 	
 		
 	classifier = def_value(classifier, SteelsClassifier)
 	
 	agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
 												for _ in xrange(num_agents)]
-																	   
+
 	
 	
 	AdaptiveNetwork.def_alpha = float(alpha)

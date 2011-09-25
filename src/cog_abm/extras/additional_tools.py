@@ -2,9 +2,6 @@
 
 from ..core.network import Network
 from pygraph.algorithms.generators import generate
-from cog_abm.core.agent import Agent
-
-
 
 
 def generate_simple_network(agents):
@@ -17,7 +14,9 @@ def generate_simple_network(agents):
 #        network.add_agent(a, i, str(i))
     return network
     
-    
+
+  
+from cog_abm.core.agent import Agent
 
 def generate_network_with_agents(n):
     agents = [Agent(aid=i) for i in xrange(n)]
@@ -28,6 +27,8 @@ def generate_network_with_agents(n):
 
 
 class SimpleInteraction(object):
+    """ Very simple interaction. Just prints agents involved and takes time.
+    """
     
     
     def __init__(self, num_agents = 2):
@@ -45,4 +46,15 @@ class SimpleInteraction(object):
             i**0.5
         return [i**0.1 for i in xrange(len(agents))]
         
+
+
+from cog_abm.ML.core import Classifier
+
+class PerfectClassifer(Classifier):
+    """ If given sample has class, it returns it
+    """
+    
+    
+    def classify(self, sample):
+        return sample.cls
 

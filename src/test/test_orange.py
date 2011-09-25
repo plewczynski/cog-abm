@@ -3,6 +3,7 @@ from cog_abm.stimuli.perception import VectorPerception
 sys.path.append('../')
 import unittest
 from cog_abm.ML.orange_wrapper import OrangeClassifier
+from cog_abm.ML.core import NominalAttribute, NumericAttribute, Sample
 import orange
 from itertools import izip
 
@@ -32,16 +33,23 @@ class TestOrange(unittest.TestCase):
         
     
     def test_classification(self):
-        train_set = [([0, 0, 0], 0), ([0, 1, 0], 0), ([0, 0, 1], 0),
-                     ([3, 0, 0], 1), ([3, 1, 0], 1), ([3, 0, 1], 1),
+        cls_meta = NominalAttribute([0,1])
+        meta = [NumericAttribute() for _ in xrange(3)]
+        train_set = [Sample([0, 0, 0], meta, 0, cls_meta),
+                     Sample([0, 1, 0], meta, 0, cls_meta),
+                     Sample([0, 0, 1], meta, 0, cls_meta),
+                     Sample([3, 0, 0], meta, 1, cls_meta),
+                     Sample([3, 1, 0], meta, 1, cls_meta),
+                     Sample([3, 0, 1], meta, 1, cls_meta),
                      ]
+
         classifier = self.knn1
 #        classifier = self.tree
         classifier.train(train_set)
         expected = [ 0, 0, 0, 1, 1, 1, 0, 1]
-        stimuli = [e[0] for e in train_set]
-        stimuli.extend([[1, 0, 0], [2,1,0]])
-        for e, s in izip(expected, stimuli):
+        samples = [s for s in train_set]
+        samples.extend([Sample([1, 0, 0], meta), Sample([2, 1, 0], meta)])
+        for e, s in izip(expected, samples):
             self.assertEqual(e, classifier.classify(s))
         
         

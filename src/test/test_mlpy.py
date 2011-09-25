@@ -1,7 +1,8 @@
 import sys
 sys.path.append('../')
 import unittest
-from steels.mlpy_multi_classif import *
+import numpy as np
+import mlpy
 
 class TestMlpy(unittest.TestCase):
     def test_knn_fda(self):

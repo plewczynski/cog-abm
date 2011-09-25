@@ -2,10 +2,54 @@
 Module providing classifiers from orange library
 """
 
-import orange, orngTree
+import orange
+import core
+from itertools import izip
 
 
-class OrangeClassifier(object):
+#useful methods
+
+def create_numeric_variable(sid, meta):
+    return orange.FloatVariable(sid)
+
+def create_nominal_variable(sid, meta):
+    return orange.EnumVariable(sid, values=[str(e) for e in meta.symbols])
+
+orange_variable_map = {
+                core.NumericAttribute.ID: create_numeric_variable,
+                core.NominalAttribute.ID: create_nominal_variable
+                }
+
+def create_basic_variables(meta):
+    return [orange_variable_map[m.ID]("atr"+str(i), m) 
+                for i,m in enumerate(meta)]
+
+
+def create_domain_with_cls(meta, cls_meta):
+    l = create_basic_variables(meta)
+    l.append(create_nominal_variable("classAttr",cls_meta))
+    return orange.Domain(l, True)
+    
+
+
+def _basic_convert_sample(domain, sample):
+    return [orange.Value(dv, v) for dv, v in 
+                    izip(domain, sample.get_values())]
+
+
+def convert_sample(domain, sample):
+    tmp = _basic_convert_sample(domain, sample)
+    return orange.Example(domain, tmp+[None])
+#this should work if cls is in domain
+
+
+def convert_sample_with_cls(domain, sample):
+    tmp = _basic_convert_sample(domain, sample)
+    return orange.Example(domain, tmp + [domain.classVar(sample.get_cls())])
+    
+
+
+class OrangeClassifier(core.Classifier):
     
     
     def __init__(self, name, *args, **kargs):
@@ -17,44 +61,29 @@ class OrangeClassifier(object):
         self.domain = None
         
     
-    def classify(self, stimulus):
-        st = self._convert_sample(stimulus)
-        return self.classifier(st)
+    def classify(self, sample):
+        s = convert_sample(self.domain_with_cls, sample)
+        return self.classifier(s)
     
     
-    def clone(self):
-        return None  # TODO 
+    # TODO: I think that parent method should be fine 
+#    def clone(self):
+#        return None  
 
     
     def train(self, samples):
         """
         Trains classifier with given samples.
-        samples is iterable of pairs (s,c) where:
-        s - sample
-        c - class ID
         
         We recreate domain, because new class could be added
         """
-        l = [orange.FloatVariable("atr"+str(i)) for i in xrange(len(samples[0][0]))]
-        classes = set([c for _,c in samples])
-        classattr = orange.EnumVariable("classAttr", values=[str(e) for e in classes])
-        l.append(classattr)
-
-        self.domain_with_cls = orange.Domain(l, True)
-        l = [self._convert_sample_with_cls(s, c) for s, c in samples]
+        meta = samples[0].meta
+        cls_meta = samples[0].cls_meta
+        self.domain_with_cls = create_domain_with_cls(meta, cls_meta)
         et = orange.ExampleTable(self.domain_with_cls)
-        et.extend(l)
+        et.extend([convert_sample_with_cls(self.domain_with_cls, s) 
+                                for s in samples])
+        
         self.classifier = self.classifier_class(et, *self.classifier_args, \
                                                 **self.classifier_kargs)
 
-    
-    def _convert_sample(self, sample):
-        tmp = sample+[None]
-        return orange.Example(self.domain_with_cls, tmp)
-    
-    
-    def _convert_sample_with_cls(self, sample, cls):
-        tmp = sample+[self.domain_with_cls.classVar(str(cls))]
-        return orange.Example(self.domain_with_cls, tmp)
-    
-    

@@ -1,6 +1,7 @@
 """Makes tests and simple simulations easier"""
 
 from ..core.network import Network
+from ..core.interaction import Interaction
 from pygraph.algorithms.generators import generate
 
 
@@ -26,7 +27,7 @@ def generate_network_with_agents(n):
 
 
 
-class SimpleInteraction(object):
+class SimpleInteraction(Interaction):
     """ Very simple interaction. Just prints agents involved and takes time.
     """
     
@@ -56,5 +57,5 @@ class PerfectClassifer(Classifier):
     
     
     def classify(self, sample):
-        return sample.cls
+        return sample.get_cls()
 

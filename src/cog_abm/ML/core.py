@@ -2,6 +2,8 @@
 Most useful things connected with ML
 """
 from itertools import izip
+from cog_abm.extras.tools import def_value
+import math
 
 
 class Classifier(object):
@@ -75,11 +77,14 @@ class NominalAttribute(Attribute):
 class Sample(object):
 	
 	
-	def __init__(self, values, meta, cls = None, cls_meta = None):
+	def __init__(self, values, meta = None, cls = None, cls_meta = None,
+								 dist_fun = None):
 		self.values = values
-		self.meta = meta
+		self.meta = def_value(meta, 
+						[NumericAttribute() for _ in xrange(len(values))])
 		self.cls = cls
 		self.cls_meta = cls_meta
+		self.dist_fun = dist_fun
 	
 	
 	def get_cls(self):
@@ -91,4 +96,23 @@ class Sample(object):
 
 	def get_values(self):
 		return [m.get_value(v) for v, m in izip(self.values, self.meta)]
+
+
+	def distance(self, other):
+		return self.dist_fun(self, other)
+	
+	
+	def __eq__(self, other):
+		return self.cls == other.cls and self.cls_meta==other.cls_meta and \
+			self.meta == other.meta and self.values == other.values
+
+
+
+#Sample distance functions
+
+def euclidean_distance(sx, sy):
+	return math.sqrt(math.fsum([
+		(x-y)**2. for x, y in izip(sx.get_values(), sy.get_values())
+		]))
+
 

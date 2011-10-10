@@ -1,15 +1,13 @@
 """
 Module provides parser for xml documents.
 """
-import urllib
 import xml.dom.minidom
-import sys
 from pygraph.readwrite import markup
 from cog_abm.core.network import Network
 from cog_abm.core.agent import *
 from cog_abm.core.environment import *
 from cog_abm.extras.color import Color
-from cog_abm.stimuli.stimulus import SimpleStimulus
+
 
 class Parser(object):
 	"""
@@ -178,8 +176,7 @@ class Parser(object):
 		L = float(chip.getElementsByTagName("L")[0].firstChild.data)
 		a = float(chip.getElementsByTagName("a")[0].firstChild.data)
 		b = float(chip.getElementsByTagName("b")[0].firstChild.data)
-
-		return SimpleStimulus(Color(L, a, b))
+		return Color(L, a, b)
 
 	def parse_munsell_environment(self, env, main_sock):
 		list_of_stimuli = self.parse_munsell_chips(env.getElementsByTagName

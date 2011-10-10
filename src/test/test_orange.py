@@ -1,5 +1,4 @@
 import sys
-from cog_abm.stimuli.perception import VectorPerception
 sys.path.append('../')
 import unittest
 from cog_abm.ML.orange_wrapper import OrangeClassifier

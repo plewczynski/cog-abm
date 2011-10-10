@@ -3,6 +3,7 @@
 import unittest
 import random
 from steels_experiment import *
+from cog_abm.ML.core import Sample
 
 class TestReactiveUnit(unittest.TestCase):
 	
@@ -25,7 +26,7 @@ class TestReactiveUnit(unittest.TestCase):
 			w = [random.randint(0, 10) for _ in range(n)]
 			self.assertTrue(0<= z.value_for(w)<=1)
 
-	def test_porownanie(self):
+	def test_comparision(self):
 		for _ in xrange(self.N):
 			n = random.randint(3, 6)
 			w1 = [random.randint(0, 10) for _ in range(n)]
@@ -74,12 +75,12 @@ class TestAdaptiveNetwork(unittest.TestCase):
 	
 	
 	def test_reaction(self):
-		#TODO: dac konkretna siec i konkretne wartosci
+		#TODO: give specific net and specific values
 		an = AdaptiveNetwork(self.sample)
 		for _ in xrange(self.N):
-			zestaw = [random.randint(0, 10) for _ in range(4)]
-			out = math.fsum([w*ru.value_for(zestaw) for ru, w in self.sample])		
-			self.assertEqual(an.reaction(zestaw), out)
+			pack = [random.randint(0, 10) for _ in range(4)]
+			out = math.fsum([w*ru.value_for(pack) for ru, w in self.sample])		
+			self.assertEqual(an.reaction(pack), out)
 	
 	
 	def test__update_units_to_None(self):
@@ -113,7 +114,7 @@ class TestAdaptiveNetwork(unittest.TestCase):
 					self.assertTrue(weww < wwan)
 	
 	
-	def test_forgetting(self):#TODO ustawic odpowiednia wartosc
+	def test_forgetting(self):#TODO set proper values
 		an = AdaptiveNetwork(self.sample)
 		an.forgetting()
 
@@ -129,7 +130,8 @@ class TestSteelsClassifier(unittest.TestCase):
 	
 	def setUp(self):
 		self.N = 100
-		self.samples = [[1, 2, 3, 4],  [1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3]]
+		self.samples = [Sample([1, 2, 3, 4]),  Sample([1, 1, 1, 1]), 
+					Sample([2, 2, 2, 2]), Sample([3, 3, 3, 3])]
 		self.ru = [ReactiveUnit(s) for s in self.samples]
 
 
@@ -137,7 +139,7 @@ class TestSteelsClassifier(unittest.TestCase):
 	def _init(self):
 		self.sc = SteelsClassifier()
 		for s in self.samples:
-			self.sc.add_catergory(s)
+			self.sc.add_category(s)
 
 
 	def test_add_category(self):
@@ -157,7 +159,9 @@ class TestSteelsClassifier(unittest.TestCase):
 		
 	def test_classify_similar(self):
 		self._init()
-		samples = [[0.9,  0.9,  0.9, 0.9],  [1.1, 1.1, 1.1, 1.1], [0.9, 1.1, 0.9, 1.1],  [1, 1, 1, 1]]
+		samples = [Sample([0.9,  0.9,  0.9, 0.9]),  
+				Sample([1.1, 1.1, 1.1, 1.1]), Sample([0.9, 1.1, 0.9, 1.1]),
+				  Sample([1, 1, 1, 1])]
 		wc = [self.sc.classify(s) for s in samples]
 		wc.sort()
 		self.assertEqual(wc[0],  wc[len(wc)-1])

@@ -19,7 +19,7 @@ class TestColor(unittest.TestCase):
 			a = random.randint(-255, 255)
 			b = random.randint(-255, 255)
 			col = Color(L, a, b)
-			self.assertEqual(col.to_ML_data(), [L, a, b])
+			self.assertEqual(col.get_values(), [L, a, b])
 	
 	
 	def test_distance(self):

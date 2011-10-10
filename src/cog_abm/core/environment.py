@@ -49,7 +49,7 @@ class Environment(object):
 			return [self.get_random_stimulus() for _ in xrange(n)]
 		
 		ret = [self.get_random_stimulus()]
-		for i in xrange(n-1):
+		for _ in xrange(n-1):
 			
 			mind = 0
 			while mind < self.dist:

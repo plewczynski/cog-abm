@@ -7,7 +7,7 @@ import random
 sys.path.append("../")
 
 from cog_abm.extras.tools import *
-
+from cog_abm.core.interaction import Interaction
 
 from cog_abm.ML.conv_classif_str import *
 
@@ -20,7 +20,6 @@ class ReactiveUnit(object):
 	
 	def __init__(self, central_value, sigma = None):
 		self.central_value = central_value
-		
 		self.sigma = def_value(sigma, ReactiveUnit.def_sigma)
 		self.mdub_sqr_sig = (-2.)*(self.sigma**2.)
 		
@@ -77,6 +76,11 @@ class AdaptiveNetwork(object):
 	
 	
 	def add_reactive_unit(self,  unit,  weight = 1.):
+		from cog_abm.extras.color import Color
+		if isinstance(unit.central_value, Color):
+			import traceback
+			print traceback.extract_stack()
+			print unit.central_value
 
 		index = self._index_of(unit)
 		if index == -1:
@@ -133,7 +137,7 @@ class SteelsClassifier(object):
 			adaptive_network = self.categories[class_id]
 		
 		if sample is not None:
-			adaptive_network.add_reactive_unit(ReactiveUnit(sample))
+			adaptive_network.add_reactive_unit(ReactiveUnit(sample.get_values()))
 		
 		self.categories[class_id] = adaptive_network
 		return class_id
@@ -143,17 +147,18 @@ class SteelsClassifier(object):
 		self.categories.pop(category_id, None)
 
 	
-	def classify(self,  elem):
+	def classify(self, sample):
 		if len(self.categories) == 0:
 			return None
-		
+		values = sample.get_values()
 		return max(self.categories.iteritems(), key = 
-		           lambda kr: kr[1].reaction(elem))[0]
+		           lambda kr: kr[1].reaction(values))[0]
 	
 	
 	def increase_samples_category(self, sample):
 		category_id = self.classify(sample)
-		self.categories[category_id].increase_sample(sample)
+		values = sample.get_values()
+		self.categories[category_id].increase_sample(values)
 	
 	
 	def forgetting(self):
@@ -162,7 +167,7 @@ class SteelsClassifier(object):
 	
 	
 	def sample_strength(self, category_id, sample):
-		return self.categories[category_id].reaction(sample)
+		return self.categories[category_id].reaction(sample.get_values())
 
 
 def convert_to_classifier_steels(classifier):
@@ -174,8 +179,8 @@ def convert_to_classifier_steels(classifier):
 
 
 from cog_abm.extras.metrics import DS_A
-#TODO: poprawic dziedziczenie
-class DiscriminationGame(object):
+
+class DiscriminationGame(Interaction):
 
 	
 	def_inc_category_treshold = 0.95
@@ -196,13 +201,13 @@ class DiscriminationGame(object):
 	
 	def disc_game(self, agent, context, topic):
 
-		ctopic = agent.classify(topic)
+		ctopic = agent.sense_and_classify(topic)
 
 		if ctopic is None:
 			pass
 			#not a  problem - count > 1 so it will add new category
 
-		ccontext = [agent.classify(c) for c in context]
+		ccontext = [agent.sense_and_classify(c) for c in context]
 		count = ccontext.count(ctopic)
 
 		return (count == 1, ctopic)
@@ -212,19 +217,19 @@ class DiscriminationGame(object):
 
 		succ_rate = DS_A(agent)
 		#print succ_rate
-		ml_topic = agent.sense(topic).to_ML_data()
+		sensed_topic = agent.sense(topic)
 		
 		if succ:
 			# success
-			agent.state.classifier.increase_samples_category(ml_topic)
+			agent.state.classifier.increase_samples_category(sensed_topic)
 		elif succ_rate >= self.inc_category_treshold:
 			#agent.state.incrase_samples_category(topic)
 			if ctopic is None:
-				ctopic = agent.state.classifier.classify(ml_topic)
-			agent.state.classifier.add_category(ml_topic, ctopic)
+				ctopic = agent.state.classifier.classify(sensed_topic)
+			agent.state.classifier.add_category(sensed_topic, ctopic)
 
 		else:
-			agent.state.classifier.add_category(ml_topic)
+			agent.state.classifier.add_category(sensed_topic)
 		
 		# lower streanght of memory - jak kolwiek to sie pisze
 		agent.state.classifier.forgetting()
@@ -267,8 +272,7 @@ class DiscriminationGame(object):
 
 #from cog_abm.agent.state import AgentState
 
-#TODO: dziedziczenie po interakcji
-class GuessingGame(object):
+class GuessingGame(Interaction):
 	
 	def __init__(self, disc_game = None, context_size = None):
 		if disc_game is None:
@@ -291,7 +295,7 @@ class GuessingGame(object):
 			# z opisu w 4.3 pierwszy paragraf
 			
 			for a in [speaker, hearer]:
-				a.state.classifier.increase_samples_category(a.sense(topic).to_ML_data())
+				a.state.classifier.increase_samples_category(a.sense(topic))
 		else:
 
 			speaker.state.lexicon.decrease(sp_topic, word)
@@ -340,7 +344,7 @@ class GuessingGame(object):
 				#                                                hearer.sense(topic).to_ML_data())
 				#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 				self.disc_game.learning_after(hearer, topic, succ, hectopic)
-				class_id = hearer.classify(topic)
+				class_id = hearer.sense_and_classify(topic)
 				hearer.state.lexicon.add_element(class_id, f)
 
 			# disc_game samo stworzy ew kategorie?
@@ -354,7 +358,7 @@ class GuessingGame(object):
 		#step 6
 
 		succ = hsf == topic
-		hectopic = hearer.classify(hsf)
+		hectopic = hearer.sense_and_classify(hsf)
 		#print "hearer_topic: "+str(hectopic)+"  hsf: "+str(hsf)+"   succ: "+str(succ)
 #		self.learning_after(speaker, hearer, succ, spctopic, hectopic, f, topic)
 		self.learning_after(speaker, hearer, succ, spctopic, hcategory, f, topic)
@@ -376,11 +380,11 @@ class SteelsAgentState(object):
 
 
 	def classify(self, sample):
-		return self.classifier.classify(sample.to_ML_data())
+		return self.classifier.classify(sample)
 
 
 	def sample_strength(self, category, sample):
-		return self.classifier.sample_strength(category, sample.to_ML_data())
+		return self.classifier.sample_strength(category, sample)
 
 
 
@@ -404,10 +408,8 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 
 
 def default_stimuli():
-	from cog_abm.stimuli.stimulus import SimpleStimulus
 	from cog_abm.extras.color import get_1269Munsell_chips
-
-	return [SimpleStimulus(c) for c in get_1269Munsell_chips()]
+	return get_1269Munsell_chips()
 	
 	
 	
@@ -417,9 +419,9 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 			classifier = SteelsClassifier, topology = None, 
 			inc_category_treshold = None, dump_freq = 50, stimuli = None):
 				
-	from cog_abm.core import *
+	from cog_abm.core import Environment, Simulation
 	from pygraph.algorithms.generators import generate
-	from cog_abm.stimuli.stimulus import SimpleStimulus
+
 #	from cog_abm.core.simulation import Simulation
 
 
@@ -438,7 +440,7 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 			Simulation.environments[key] = Environment(environments[key].stimuli, True)
 	#bez sensu...
 	if "global" in environments:
-		glob = Environment([SimpleStimulus(c) for c in environments["global"].stimuli], True)
+		glob = Environment(environments["global"].stimuli, True)
 	else:
 		glob = None
 		
@@ -456,7 +458,7 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 			environments = None, interaction_type="DG", beta = 1., context_size = 4,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None, stimuli = None):
 	
-	from cog_abm.core import *
+
 	from cog_abm.agent.sensor import SimpleSensor
 	
 	environments = def_value(environments, {})
@@ -496,7 +498,7 @@ def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None,
 		if classif_arg == None:
 			agent.set_state(SteelsAgentStateWithLexicon(classifier()))
 		else:
-			agent.set_state(SteelsAgentStateWithLexicon(classifier(classif_arg)))
+			agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)

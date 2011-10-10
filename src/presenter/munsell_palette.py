@@ -12,7 +12,7 @@ from cog_abm.core.result import *
 from steels.steels_experiment import *
 #from steels.analyzer import *
 from time import time
-from cog_abm.stimuli.stimulus import SimpleStimulus
+
 
 argmax = lambda funct, items: max(izip(imap(funct, items), items))
 argmin = lambda funct, items: min(izip(imap(funct, items), items))
@@ -43,7 +43,7 @@ class AgentData(object):
 			return
 
 		dictionary = {}
-		category_set = [agent.state.classify(stimuli.content) 
+		category_set = [agent.state.classify(stimuli) 
 		                for stimuli in self.cielab]
 		#print category_set
 
@@ -638,8 +638,8 @@ class MunsellPaletteInterface(object):
 		#c2 = grapefruit.Color.NewFromLab(color.L, color.a/100, color.b/100, wref=grapefruit.Color.WHITE_REFERENCE['std_D65'])
 		#if c1 is  c2:
 		#	print c1, c2
-		return grapefruit.Color.NewFromLab(color.content.L, 
-			color.content.a/100, color.content.b/100, wref=grapefruit.Color.
+		return grapefruit.Color.NewFromLab(color.L, 
+			color.a/100, color.b/100, wref=grapefruit.Color.
 			WHITE_REFERENCE['std_D65'])
 
 	def main(self):
@@ -765,6 +765,7 @@ if __name__ == "__main__":
 	if (str2bool(opts.legend) == 1):
 		mpi = MunsellPaletteInterfaceWithLanguage(opts.directory, opts.agents, 
 		                                          opts.find_focal)
+
 	else:
 		mpi = MunsellPaletteInterface(opts.directory, opts.agents, 
 		                              opts.find_focal)

@@ -55,12 +55,17 @@ class Agent(object):
 		return self.sensor.sense(stimulus)
 
 
-	def classify(self, stimulus):
+#	def classify(self, sample):
+#		return self.state.classify(sample)
+
+
+	def sense_and_classify(self, stimulus):
 		return self.state.classify(self.sense(stimulus))
+		#return self.classify(self.sense(stimulus))
 
 
 	def __str__(self):
-		return "Agent("+str(self.id)+":"+self.state.__str__()+")"
+		return "Agent("+str(self.id)+":"+str(self.state)+")"
 	
 	
 	def __eq__(self, other):

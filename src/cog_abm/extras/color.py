@@ -2,8 +2,6 @@
 Module providing definition of the Color class, implementing Perception's and
 the Stimulus' interfaces.
 """
-import math
-from itertools import izip
 from cog_abm.ML.core import Sample, euclidean_distance
 
 
@@ -28,19 +26,6 @@ class Color(Sample):
 		self.a = a
 		self.b = b
 	
-#	
-#	def to_ML_data(self):
-#		return [self.L, self.a, self.b]
-
-#
-#	def distance(self, other):
-#		l = izip(self.to_ML_data(), other.to_ML_data())
-#		return math.sqrt(math.fsum([(x-y)**2 for x, y in l]))
-	
-#	
-#	def __eq__(self, other):
-#		return self.L == other.L and self.a == other.a and self.b == other.b
-
 
 
 def get_WCS_colors():
@@ -53,5 +38,6 @@ def get_WCS_colors():
 def get_1269Munsell_chips():
 	from cog_abm.extras.parser import Parser
 	import os
-	return Parser().parse_environment(
-				os.path.join(os.path.dirname(__file__), "1269_munsell_chips.xml")).stimuli
+	return Parser().parse_environment(os.path.join(os.path.dirname(__file__),
+									 "1269_munsell_chips.xml")).stimuli
+

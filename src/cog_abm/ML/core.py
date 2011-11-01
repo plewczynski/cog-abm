@@ -38,6 +38,10 @@ class Attribute(object):
 	
 	def get_value(self, value):
 		pass
+	
+	
+	def __eq__(self, other):
+		return self.ID==other.ID
 
 
 
@@ -71,6 +75,11 @@ class NominalAttribute(Attribute):
 
 	def get_value(self, value):
 		return self.get_symbol(value)
+	
+	
+	def __eq__(self, other):
+		return super(NominalAttribute, self).__eq__(other) and \
+			self.symbols==other.symbols
 
 
 
@@ -103,8 +112,8 @@ class Sample(object):
 	
 	
 	def __eq__(self, other):
-		return self.cls == other.cls and self.cls_meta==other.cls_meta and \
-			self.meta == other.meta and self.values == other.values
+		return self.cls==other.cls and self.cls_meta==other.cls_meta and \
+			self.meta==other.meta and self.values==other.values
 
 
 
@@ -116,3 +125,12 @@ def euclidean_distance(sx, sy):
 		]))
 
 
+
+from scipy.io.arff import loadarff
+
+def load_samples_arff(file_name):
+	data, meta = loadarff(file_name)
+	print data, meta
+	
+	
+	

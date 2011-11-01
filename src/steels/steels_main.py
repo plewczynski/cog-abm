@@ -22,10 +22,9 @@ def load_params(file):
 
 	
 def default_params():
-	from cog_abm.stimuli.stimulus import SimpleStimulus
 	from cog_abm.extras.color import get_1269Munsell_chips
 	return {	'interaction_type': "DG", 
-					'stimuli' : [SimpleStimulus(c) for c in get_1269Munsell_chips()],  
+					'stimuli' : get_1269Munsell_chips(),  
 					'num_agents': 10,
 					'context_size' : 4,
 					'num_iter' : 1000,

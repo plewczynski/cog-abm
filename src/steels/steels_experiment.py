@@ -20,7 +20,7 @@ class ReactiveUnit(object):
 	
 	def __init__(self, central_value, sigma = None):
 		self.central_value = central_value
-		self.sigma = def_value(sigma, ReactiveUnit.def_sigma)
+		self.sigma = float(def_value(sigma, ReactiveUnit.def_sigma))
 		self.mdub_sqr_sig = (-2.)*(self.sigma**2.)
 		
 	
@@ -29,9 +29,7 @@ class ReactiveUnit(object):
 		""" Calculate reaction for given vector
 		"""
 		fsum = math.fsum( 
-#						[(xi-mi)**2. for xi, mi in izip(x, self.central_value)])
 			imap(lambda (xi, mi):(xi-mi)**2., izip(x, self.central_value)))
-#						[(xi-mi)**2. for xi, mi in zip(x, self.central_value)])
 
 		return math.exp(fsum / self.mdub_sqr_sig)
 	
@@ -44,8 +42,8 @@ class ReactiveUnit(object):
 
 
 	def dist(self, other):
-		return math.sqrt(math.fsum([(m-mp)**2 for m, mp in \
-			izip(self.central_value, other.central_value, fillvalue=0.)]))
+		return math.sqrt(math.fsum([(m-mp)**2. for m, mp in \
+			izip(self.central_value, other.central_value)]))
 			#izip_longest(self.central_value, other.central_value, fillvalue=0.)]))
 	
 	
@@ -58,7 +56,7 @@ class AdaptiveNetwork(object):
 	def_beta = 1.
 	
 	def __init__(self,  reactive_units = None, alpha = None, beta = None):
-		""" Musza byc z wagami !
+		""" Must be with weights !
 		"""
 		self.units = def_value(reactive_units, [])
 		self.alpha = def_value(alpha, AdaptiveNetwork.def_alpha)
@@ -76,12 +74,6 @@ class AdaptiveNetwork(object):
 	
 	
 	def add_reactive_unit(self,  unit,  weight = 1.):
-		from cog_abm.extras.color import Color
-		if isinstance(unit.central_value, Color):
-			import traceback
-			print traceback.extract_stack()
-			print unit.central_value
-
 		index = self._index_of(unit)
 		if index == -1:
 			self.units.append((unit, weight))
@@ -96,7 +88,6 @@ class AdaptiveNetwork(object):
 	def _update_units(self,  fun):
 		tmp = [fun(u, w) for u, w in self.units]
 		self.units = filter(lambda x: x is not None,  tmp)
-
 
 	
 	def remove_low_units(self,  threshold = 0.1**30):
@@ -407,6 +398,7 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 		return self.lexicon.word_for(category)
 
 
+
 def default_stimuli():
 	from cog_abm.extras.color import get_1269Munsell_chips
 	return get_1269Munsell_chips()
@@ -510,85 +502,4 @@ def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None,
 						GuessingGame(None, context_size), topology = topology, 
 						dump_freq = dump_freq)
 
-
-
-def old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, interaction, 
-			classifier = SteelsClassifier, topology = None, 
-			inc_category_treshold = None, dump_freq = 50):
-				
-	sys.path.append("../")
-	from pygraph.algorithms.generators import generate
-	from cog_abm.core.environment import Environment
-	from cog_abm.core.simulation import Simulation
-
-
-	num_agents = len(agents)
-	topology = def_value(topology, 
-	                     generate(num_agents, num_agents*(num_agents-1)/2))
-	
-	stimuli = def_value(stimuli, default_stimuli())
-	
-	if inc_category_treshold is not None:
-		interaction.__class__.def_inc_category_treshold = inc_category_treshold
-		
-	env = Environment(stimuli, True)
-	Simulation.global_environment = env
-
-	s = Simulation(topology, interaction, agents)
-	res = s.run(num_iter, dump_freq)
-	
-	return res
-
-
-
-
-def old_steels_basic_experiment_DG(num_iter = 1000, num_agents = 10, stimuli = None,
-					topology = None, context_size = 4, classifier = None, dump_freq = 50, 
-					inc_category_treshold = 0.95, alpha = 0.1, beta = 1., sigma = 1.):
-	
-	sys.path.append("../")
-	from cog_abm.core.agent import Agent
-	from cog_abm.agent.sensor import SimpleSensor
-
-	
-	
-	classifier = def_value(classifier, SteelsClassifier)
-	
-	agents = [Agent(SteelsAgentState(classifier(classif_arg)), SimpleSensor()) \
-												for _ in xrange(num_agents)]
-	
-	
-	AdaptiveNetwork.def_alpha = float(alpha)
-	AdaptiveNetwork.def_beta = float(beta)
-	ReactiveUnit.def_sigma = float(sigma)
-	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
-	
-	return old_steels_uniwersal_basic_experiment(num_iter, agents,
-		stimuli, DiscriminationGame(context_size), dump_freq = dump_freq)
-
-
-def old_steels_basic_experiment_GG(num_iter = 1000, num_agents = 10, stimuli = None,
-					topology = None, context_size = 4, classifier = None, dump_freq = 50, 
-					inc_category_treshold = 0.95, alpha = 0.1, beta = 1., sigma = 1.):
-	
-	sys.path.append("../")
-	from cog_abm.core.agent import Agent
-	from cog_abm.agent.sensor import SimpleSensor
-	
-		
-	classifier = def_value(classifier, SteelsClassifier)
-	
-	agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
-												for _ in xrange(num_agents)]
-
-	
-	
-	AdaptiveNetwork.def_alpha = float(alpha)
-	AdaptiveNetwork.def_beta = float(beta)
-	ReactiveUnit.def_sigma = float(sigma)
-	DiscriminationGame.def_inc_category_treshold = float(inc_category_treshold)
-	
-	return old_steels_uniwersal_basic_experiment(num_iter, agents, stimuli, 
-						GuessingGame(None, context_size), topology = topology, 
-						dump_freq = dump_freq)
 

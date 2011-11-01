@@ -55,7 +55,19 @@ class PerfectClassifer(Classifier):
     """ If given sample has class, it returns it
     """
     
-    
     def classify(self, sample):
         return sample.get_cls()
 
+
+
+class StupidClassifer(Classifier):
+    """ Always returns the same class
+    """
+    
+    def __init__(self, cls = 0):
+        self.cls = cls
+    
+    
+    def classify(self, sample):
+        return self.cls
+    

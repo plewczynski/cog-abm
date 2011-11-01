@@ -7,39 +7,37 @@ from cog_abm.ML.core import *
 animals = ["dog", "cat","lion","duck","python:)"]
 
 
-class TestMlCore(unittest.TestCase):
-    
-    def setUp(self):
-        pass
 
-
-class TestNumericAttribute(unittest.TestCase):
-    
-    def setUp(self):
-        pass
-
-    def test_getting_value(self):
-        na = NumericAttribute()
-        for i in xrange(10):
-            self.assertEqual(i, na.get_value(i))
-
-
-
-class TestNominalAttribute(unittest.TestCase):
+class TestAttributes(unittest.TestCase):
     
     def setUp(self):
         self.symbols = animals
         self.na = NominalAttribute(self.symbols)
+
+
+    def test_numeric_attr_getting_value(self):
+        na = NumericAttribute()
+        for i in xrange(10):
+            self.assertEqual(i, na.get_value(i))
     
     
-    def test_getting_value(self):
+    def test_nominal_attr_getting_value(self):
         na = NominalAttribute(self.symbols)
         for i,s in enumerate(self.symbols):
             self.assertEqual(s, na.get_value(i))
             self.assertEqual(s, na.get_symbol(i))
             self.assertEqual(i, na.get_idx(s))
 
-
+    
+    def test_equality(self):
+        self.assertEqual(self.na, NominalAttribute(animals))
+        self.assertEqual(self.na, 
+                NominalAttribute(["dog", "cat","lion","duck","python:)"]))
+        self.assertNotEqual(self.na, NominalAttribute(animals+["donkey"]))
+        self.assertEqual(NumericAttribute(), NumericAttribute())
+        self.assertNotEqual(self.na, NumericAttribute())
+        
+    
 
 class TestSample(unittest.TestCase):
     
@@ -57,3 +55,37 @@ class TestSample(unittest.TestCase):
         
         self.assertEqual(self.sample.get_values(), [1.2, "dog"])
         self.assertEqual(self.sample_cl.get_values(), [100, "cat"])
+    
+    
+    def test_equality(self):
+        self.assertNotEqual(self.sample, self.sample_cl)
+        
+        meta = [NumericAttribute(), NominalAttribute(animals)]
+        sample = Sample([1.2, meta[1].get_idx("dog")], meta)
+        self.assertEqual(self.sample, sample)
+        self.assertNotEqual(self.sample, self.sample_cl)
+        meta = [NumericAttribute(), NominalAttribute(animals), NumericAttribute()]
+        sample = Sample([1.2, meta[1].get_idx("dog"), 3.14], meta)
+        self.assertNotEqual(self.sample, sample)
+        self.assertNotEqual(self.sample_cl, sample)
+        
+        meta = [NumericAttribute(), NominalAttribute(animals)]
+        sample = Sample([1.2, meta[1].get_idx("cat")], meta)
+        self.assertNotEqual(self.sample, sample)
+        self.assertNotEqual(self.sample_cl, sample)
+        
+        sample = Sample([1.3, meta[1].get_idx("dog")], meta)
+        self.assertNotEqual(self.sample, sample)
+        self.assertNotEqual(self.sample_cl, sample)
+        
+        sample = Sample([100, self.meta[1].get_idx("cat")], self.meta,
+                                self.meta_cl.get_idx("duck"), self.meta_cl)
+        self.assertEqual(self.sample_cl, sample)
+        self.assertNotEqual(self.sample, sample)
+        
+        sample = Sample([10.20, self.meta[1].get_idx("cat")], self.meta,
+                                self.meta_cl.get_idx("duck"), self.meta_cl)    
+        self.assertNotEqual(self.sample, sample)
+        self.assertNotEqual(self.sample_cl, sample)
+        
+        

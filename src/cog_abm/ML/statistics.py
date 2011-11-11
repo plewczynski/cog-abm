@@ -14,7 +14,6 @@ def calc_basic_rates(classifier, samples, positive_class):
 	return tuple( float(x) for x in (tp, tn, fp, fn))
 
 
-
 def basic_rates_based(fn):
 	def calculator(classifier, samples, positive_class, basic_rates = None):
 		if basic_rates is None:
@@ -25,20 +24,6 @@ def basic_rates_based(fn):
 			return 0.
 	return calculator
 
-
-
-
-
-#def calc_basic_rates(classifier, samples):
-#	tp, tn, fp, fn = 0., 0., 0., 0.
-#	classes = set([s.get_class() for s in samples])
-#	for c in classes:
-#		ttp, ttn, tfp, tfn = calc_basic_rates_binary(classifier, c, samples)
-#		tp, tn, fp, fn = tp+ttp, tn+ttn, fp+tfp, fn+tfn
-#	n = len(classes)
-#	# not shure if this is correct...
-#	return (tp/n, tn/n, fp/n, fn/n)
-		
 
 # from http://en.wikipedia.org/wiki/Receiver_operating_characteristic
 # passing basic_rates for speed up

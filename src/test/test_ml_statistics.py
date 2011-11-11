@@ -6,10 +6,6 @@ from cog_abm.extras.additional_tools import StupidClassifer
 from cog_abm.ML.statistics import *
 
 
-animals = ["dog", "cat","lion","duck","python:)"]
-
-
-
 class TestStatistics(unittest.TestCase):
     
     def setUp(self):

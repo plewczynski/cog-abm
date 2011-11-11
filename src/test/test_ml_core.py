@@ -88,4 +88,27 @@ class TestSample(unittest.TestCase):
         self.assertNotEqual(self.sample, sample)
         self.assertNotEqual(self.sample_cl, sample)
         
+
+
+class TestSamplePreparation(unittest.TestCase):
+    
+    def test_loading_arff(self):
+        samples = load_samples_arff("test/iris.arff")
+        expected_meta = [NumericAttribute() for _ in xrange(4)]
+        expected_cls_meta = NominalAttribute(
+                    ["Iris-setosa","Iris-versicolor","Iris-virginica"])
         
+        sample = samples[0]
+        self.assertEqual(sample.meta, expected_meta)
+        self.assertEqual(sample.cls_meta, expected_cls_meta)
+      
+    
+    def test_spliting_samples(self):
+        samples = load_samples_arff("test/iris.arff")
+        import random
+        for _ in xrange(100):
+            split_ratio = random.random()
+            train, test = split_data(samples, split_ratio)
+            self.assertEqual(math.ceil(len(samples) * split_ratio), len(train))
+            self.assertEqual(len(samples), len(train) + len(test))
+

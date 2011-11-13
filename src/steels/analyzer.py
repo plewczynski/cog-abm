@@ -53,7 +53,7 @@ def count_categ(agents, params, it):
 	
 
 
-from cog_abm.extras.metrics import *
+from metrics import *
 
 #def avg_cc(agents, params, it):
 #	return [float(sum(count_categ(agents, params, it))) / len(agents)]

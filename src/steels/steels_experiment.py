@@ -100,7 +100,7 @@ class AdaptiveNetwork(object):
 					lambda u, w: (u, w+float(self.beta)*u.value_for(sample)))
 
 			#lambda u, w: (u, min(1., w+self.beta*u.value_for(sample))))
-					# ograniczenie na max wage
+					# if we would like to keep uper limit
 	
 	
 	#TODO: revrite it to be in time O(1)
@@ -169,7 +169,7 @@ def convert_to_classifier_steels(classifier):
 		return  convert_to_classifier(classifier)
 
 
-from cog_abm.extras.metrics import DS_A
+from metrics import DS_A
 
 class DiscriminationGame(Interaction):
 

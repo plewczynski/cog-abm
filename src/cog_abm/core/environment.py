@@ -45,17 +45,25 @@ class Environment(object):
 		
 
 	def get_random_stimuli(self, n):
+		"""
+		Be careful with this - can take some time when using the distance!
+		"""
 		if not self.use_distance:
 			return [self.get_random_stimulus() for _ in xrange(n)]
 		
-		ret = [self.get_random_stimulus()]
-		for _ in xrange(n-1):
-			
-			mind = 0
-			while mind < self.dist:
-				tmp = self.get_random_stimulus()
-				mind = min(imap(tmp.distance, ret))
-			ret.append(tmp)
-		
-		return ret
+		for _ in xrange(250):
+			ret = [self.get_random_stimulus()]
+			for _ in xrange(n-1):
+				mind = 0
+				try_limit = 10
+				while mind < self.dist and try_limit>0:
+					tmp = self.get_random_stimulus()
+					mind = min(imap(tmp.distance, ret))
+					try_limit -= 1
+				if mind < self.dist:
+					break
+				ret.append(tmp)
+			if len(ret) == n:
+				return ret
+		raise Exception("Couldn't get samples separated by such distance!")
 		

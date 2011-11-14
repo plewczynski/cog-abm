@@ -109,9 +109,10 @@ class TestAdaptiveNetwork(unittest.TestCase):
 			wwan = (an.units[an._index_of(ru)])[1]
 			
 			for wewru, weww in self.sample:
+				print weww, (an.units[an._index_of(wewru)])[1]
 				self.assertTrue(weww <= (an.units[an._index_of(wewru)])[1])
 				if ru == wewru:
-					self.assertTrue(weww < wwan)
+					self.assertTrue(weww < wwan or weww == wwan == 1)
 	
 	
 	def test_forgetting(self):#TODO set proper values
@@ -121,7 +122,7 @@ class TestAdaptiveNetwork(unittest.TestCase):
 		for ru, w in an.units:
 			for ruw,  ww in self.sample:
 				if ruw == ru:
-					self.assertTrue(w < ww or w == 0)
+					self.assertTrue(w < ww or ww == 0)
 
 
 
@@ -132,7 +133,7 @@ class TestSteelsClassifier(unittest.TestCase):
 		self.N = 100
 		self.samples = [Sample([1, 2, 3, 4]),  Sample([1, 1, 1, 1]), 
 					Sample([2, 2, 2, 2]), Sample([3, 3, 3, 3])]
-		self.ru = [ReactiveUnit(s) for s in self.samples]
+		self.ru = [ReactiveUnit(s.get_values()) for s in self.samples]
 
 
 

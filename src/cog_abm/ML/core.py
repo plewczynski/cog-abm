@@ -113,8 +113,12 @@ class Sample(object):
 		else:
 			self.cls = cls
 			self.cls_meta = cls_meta
-			
-		self.dist_fun = dist_fun
+		
+		if dist_fun is None and \
+				not [x for x in self.meta if x.ID != NumericAttribute.ID]:
+			self.dist_fun = euclidean_distance
+		else:
+			self.dist_fun = dist_fun
 	
 	
 	def get_cls(self):

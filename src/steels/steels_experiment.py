@@ -10,6 +10,7 @@ from cog_abm.extras.tools import *
 from cog_abm.core.interaction import Interaction
 
 from cog_abm.ML.conv_classif_str import *
+from cog_abm.ML.core import Classifier
 
 
 class ReactiveUnit(object):
@@ -19,7 +20,7 @@ class ReactiveUnit(object):
 	def_sigma = 1.
 	
 	def __init__(self, central_value, sigma = None):
-		self.central_value = central_value
+		self.central_value = [float(x) for x in central_value]
 		self.sigma = float(def_value(sigma, ReactiveUnit.def_sigma))
 		self.mdub_sqr_sig = (-2.)*(self.sigma**2.)
 		
@@ -39,12 +40,6 @@ class ReactiveUnit(object):
 			return other.central_value == self.central_value
 		else:
 			return False
-
-
-	def dist(self, other):
-		return math.sqrt(math.fsum([(m-mp)**2. for m, mp in \
-			izip(self.central_value, other.central_value)]))
-			#izip_longest(self.central_value, other.central_value, fillvalue=0.)]))
 	
 	
 
@@ -91,27 +86,25 @@ class AdaptiveNetwork(object):
 
 	
 	def remove_low_units(self,  threshold = 0.1**30):
-		self.units = filter(lambda (u, w): w >= threshold,  self.units)
-#		self.units = [(u, w) for u, w in self.units if w >= threshold]
+		self.units = [(u, w) for u, w in self.units if w >= threshold]
 	
 	
 	def increase_sample(self, sample):
-		self._update_units( \
-					lambda u, w: (u, w+float(self.beta)*u.value_for(sample)))
-
-			#lambda u, w: (u, min(1., w+self.beta*u.value_for(sample))))
-					# if we would like to keep uper limit
+		self._update_units(lambda u, w:
+						(u, min(1.,w+float(self.beta)*u.value_for(sample))))
+					# because we don't want to exceed 1
 	
 	
-	#TODO: revrite it to be in time O(1)
+	#TODO: rewrite it to be in time O(1)
 	def forgetting(self):
 		self._update_units(lambda u, w: (u, self.alpha*w))
-		#self.remove_low_units(0.1**40)
+#		self.remove_low_units(0.1**50)
+#		TODO: think about ^^^^^
 	
 	
 	
 	
-class SteelsClassifier(object):
+class SteelsClassifier(Classifier):
 	
 	def __init__(self):
 		self.categories = {}
@@ -193,10 +186,7 @@ class DiscriminationGame(Interaction):
 	def disc_game(self, agent, context, topic):
 
 		ctopic = agent.sense_and_classify(topic)
-
-		if ctopic is None:
-			pass
-			#not a  problem - count > 1 so it will add new category
+		# no problem if ctopic is None => count>1 so it will add new category
 
 		ccontext = [agent.sense_and_classify(c) for c in context]
 		count = ccontext.count(ctopic)
@@ -211,7 +201,6 @@ class DiscriminationGame(Interaction):
 		sensed_topic = agent.sense(topic)
 		
 		if succ:
-			# success
 			agent.state.classifier.increase_samples_category(sensed_topic)
 		elif succ_rate >= self.inc_category_treshold:
 			#agent.state.incrase_samples_category(topic)
@@ -398,13 +387,6 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 		return self.lexicon.word_for(category)
 
 
-
-def default_stimuli():
-	from cog_abm.extras.color import get_1269Munsell_chips
-	return get_1269Munsell_chips()
-	
-	
-	
 #Steels experiment main part
 
 def steels_uniwersal_basic_experiment(num_iter, agents, environments, interaction, 
@@ -421,8 +403,8 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 	topology = def_value(topology, 
 	                     generate(num_agents, num_agents*(num_agents-1)/2))
 	
-	if stimuli == None:
-		stimuli = def_value(None, default_stimuli())
+#	if stimuli == None:
+#		stimuli = def_value(None, default_stimuli())
 	
 	if inc_category_treshold is not None:
 		interaction.__class__.def_inc_category_treshold = inc_category_treshold

@@ -19,11 +19,6 @@ class Syllable:
 	def __str__(self):
 		return str(self.content)
 	
-	
-	@staticmethod
-	def get_instance(value):
-		if value in Syllable.allowed_syllables:
-			return value
 
 	@staticmethod
 	def set_allowed_syllables(new_set):
@@ -65,9 +60,9 @@ class Word(object):
 		
 		
 	@staticmethod
-	def get_random_not_in(set):
+	def get_random_not_in(words):
 		w = Word.get_random()
-		while w in set:
+		while w in words:
 			w = Word.get_random()
 		return w
 	
@@ -103,12 +98,11 @@ class Lexicon(object):
 		if word not in self.F:
 			self.F.append(word)
 		
-		self.base[(category, word)] = Lexicon.s
+		self.base[(category, word)] = weight
 		return word
 		
 	
 	def _find_best(self, choser):
-		
 		rval = (None, None)
 		if len(self.base) == 0:
 			return rval

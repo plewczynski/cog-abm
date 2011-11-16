@@ -41,7 +41,7 @@ def count_categ(agents, params, it):
 	def pom(a):
 		Z = {}
 		for s in stimuli:
-			Z[a.classify(s)]=1
+			Z[a.sense_and_classify(s)]=1
 		return len(Z)
 	
 	tmpr = cc_computed.get(it, None)

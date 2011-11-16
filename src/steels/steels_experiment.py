@@ -411,12 +411,10 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 		
 	env = Environment(stimuli, True)
 	for key in environments.keys():
-			Simulation.environments[key] = Environment(environments[key].stimuli, True)
-	#bez sensu...
-	if "global" in environments:
-		glob = Environment(environments["global"].stimuli, True)
-	else:
-		glob = None
+			Simulation.environments[key] = Environment(environments[key].stimuli, True, 50.)
+	#TODO: think about this all...
+	glob = Simulation.environments["global"]
+
 		
 	Simulation.global_environment = def_value(glob , env)
 

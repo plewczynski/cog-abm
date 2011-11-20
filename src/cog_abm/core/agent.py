@@ -25,6 +25,7 @@ class Agent(object):
 		self.state = state
 		self.env = environment
 		self.inter_res = []
+		self.fitness = {}
 
 
 	def set_state(self, state):
@@ -34,7 +35,12 @@ class Agent(object):
 	def set_sensor(self, sensor):
 		self.sensor = sensor
 
+	def set_fitness_measure(self, fitness_id, fitness):
+		self.fitness[fitness_id] = fitness
 
+	def get_fitness_measure(self, fitness_id):
+		return self.fitness[fitness_id]
+	
 	def get_environment(self):
 		"""
 		Gives environment where given agent "lives"

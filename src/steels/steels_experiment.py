@@ -371,10 +371,9 @@ class SteelsAgentState(object):
 class SteelsAgentStateWithLexicon(SteelsAgentState):
 	
 	def __init__(self, classifier, initial_lexicon = None):
-		sys.path.append("../")
+		super(SteelsAgentStateWithLexicon, self).__init__(classifier)
 		from cog_abm.extras.lexicon import Lexicon
-		
-		self.classifier = classifier
+
 		if initial_lexicon is None:
 			initial_lexicon = Lexicon()
 		self.lexicon = initial_lexicon
@@ -389,8 +388,8 @@ class SteelsAgentStateWithLexicon(SteelsAgentState):
 
 #Steels experiment main part
 
-def steels_uniwersal_basic_experiment(num_iter, agents, environments, interaction, 
-			classifier = SteelsClassifier, topology = None, 
+def steels_uniwersal_basic_experiment(num_iter, agents, environments, interaction,
+			classifier = SteelsClassifier, topology = None,
 			inc_category_treshold = None, dump_freq = 50, stimuli = None):
 				
 	from cog_abm.core import Environment, Simulation
@@ -432,16 +431,16 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 	
 
 	from cog_abm.agent.sensor import SimpleSensor
+#	from cog_abm.extras.fitness import get_buffered_average
 	
 	environments = def_value(environments, {})
-	#agents = [Agent()] * num_agents#
-	def_value(agents, [])
 	classifier, classif_arg = convert_to_classifier_steels(classifier)
 
 	#niestety narazie tak 
 	for agent in agents:
-		agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
+		agent.set_state(SteelsAgentState(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
+#		agent.set_fitness_measure("DS", get_buffered_average(50))
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
 	AdaptiveNetwork.def_beta = float(beta)
@@ -458,20 +457,20 @@ def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
 	
 	from cog_abm.agent.sensor import SimpleSensor
+#	from cog_abm.extras.fitness import get_buffered_average
+
 
 	environments = def_value(environments, {})
-	agents = def_value(agents, [])
-	#print 'classifier: ', classifier#classifier = def_value(None, SteelsClassifier)
 	classifier, classif_arg = convert_to_classifier_steels(classifier)
 	#agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
 
 	#niestety narazie tak 
+	classif_arg = def_value(classif_arg, [])
 	for agent in agents:
-		if classif_arg == None:
-			agent.set_state(SteelsAgentStateWithLexicon(classifier()))
-		else:
-			agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
+		agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
+#		agent.set_fitness_measure("DS", get_buffered_average(50))
+#		agent.set_fitness_measure("CS", get_buffered_average(50))
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
 	AdaptiveNetwork.def_beta = float(beta)

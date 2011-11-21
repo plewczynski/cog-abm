@@ -7,7 +7,7 @@ from time import time
 sys.path.append('../')
 from itertools import imap
 import math
-
+from progressbar import ProgressBar, Percentage, Bar, ETA
 
 
 def compose(fun_out, fun_in):
@@ -83,16 +83,10 @@ pref_fun_map = {
 def gen_res(results, params, funs):
 	start_time = time()
 	logging.info("Calculating stats...")
-	
-	retv = []
-	for it, agents in results:
-		
-		logging.debug("Calculating iteration "+str(it)+"...")
-		w = []
-		map(lambda f: w.extend(f(agents, params, it)), funs)
-		
-		retv.append(w)
-		logging.debug("Calculating iteration "+str(it)+"... Done")
+
+	pb = ProgressBar(widgets=[Percentage(), Bar(), ETA()])	
+	retv = [[x for f in funs for x in f(agents, params, it)]
+					for it, agents in pb(results)]
 
 	logging.info("Calculating stats finished. Total time: "+str(time()-start_time))
 	return retv

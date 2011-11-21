@@ -12,7 +12,7 @@ class Environment(object):
 	"""
 	
 	
-	def __init__(self,  stimuli, use_distance = False, distance = 45.):
+	def __init__(self,  stimuli, use_distance = False, distance = 50.):
 		"""
 		Initialize environment
 		

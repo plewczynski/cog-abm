@@ -17,7 +17,7 @@ class ReactiveUnit(object):
 	""" Reactive units are used in adaptive networks
 	"""
 	
-	def_sigma = 1.
+	def_sigma = 10.
 	
 	def __init__(self, central_value, sigma = None):
 		self.central_value = [float(x) for x in central_value]
@@ -250,7 +250,6 @@ class DiscriminationGame(Interaction):
 		return (("DG", succ1), ("DG", succ2))
 
 
-#from cog_abm.agent.state import AgentState
 
 class GuessingGame(Interaction):
 	

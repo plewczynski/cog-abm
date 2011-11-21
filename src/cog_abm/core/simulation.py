@@ -7,6 +7,7 @@ from itertools import izip
 from time import time
 import copy
 import cPickle
+from progressbar import ProgressBar, Percentage, Bar, ETA
 
 
 
@@ -69,8 +70,8 @@ class Simulation(object):
 		logging.info("Simulation start...")
 		
 		self.dump_results(0)
-
-		for i in xrange(iterations//dump_freq):
+		pb = ProgressBar(widgets=[Percentage(), Bar(), ETA()])
+		for i in pb(xrange(iterations//dump_freq)):
 			self._do_iterations(dump_freq)
 			self.dump_results((i+1)*dump_freq)
 		

@@ -6,8 +6,8 @@ import math
 from itertools import ifilter, imap, combinations
 
 
-#window_size = 50
-window_size = 1<<50
+window_size = 50
+#window_size = 1<<50
 
 def DS_A(agent):
 

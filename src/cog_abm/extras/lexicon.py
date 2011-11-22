@@ -6,7 +6,7 @@ from itertools import groupby
 
 class Syllable:
 	
-	allowed_syllables = ["a","b","c","d", "e"]
+	allowed_syllables = ["a", "b", "c", "d", "e", "f", "g"]
 	
 	def __init__(self, content):
 		self.content = content
@@ -32,7 +32,7 @@ class Syllable:
 
 class Word(object):
 	
-	max_len = 4
+	max_len = 5
 	
 	def __init__(self, syllables):
 		self.syllables = syllables

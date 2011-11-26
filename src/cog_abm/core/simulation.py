@@ -48,9 +48,10 @@ class Simulation(object):
 		
 	
 	def _start_interaction(self, agents):
-		results = self.interaction.interact(*agents)
-		for r, a in izip(results, agents):
-			a.add_inter_result(r)
+		self.interaction.interact(*agents)
+#		results = self.interaction.interact(*agents)
+#		for r, a in izip(results, agents):
+#			a.add_inter_result(r)
 
 	
 	def _do_iterations(self, num_iter):

@@ -4,6 +4,7 @@ This module implements Steels exepriment.
 import math
 import sys
 import random
+from steels import metrics
 sys.path.append("../")
 
 from cog_abm.extras.tools import *
@@ -11,6 +12,8 @@ from cog_abm.core.interaction import Interaction
 
 from cog_abm.ML.conv_classif_str import *
 from cog_abm.ML.core import Classifier
+
+from cog_abm.agent.sensor import SimpleSensor
 
 
 class ReactiveUnit(object):
@@ -165,7 +168,6 @@ def convert_to_classifier_steels(classifier):
 from metrics import DS_A
 
 class DiscriminationGame(Interaction):
-
 	
 	def_inc_category_treshold = 0.95
 	
@@ -179,8 +181,8 @@ class DiscriminationGame(Interaction):
 		return 2
 	
 	
-	def save(self, agent, result):
-		agent.add_inter_result(("DG", result))
+	def save_result(self, agent, result):
+		agent.add_payoff("DG", int(result))
 	
 	
 	def disc_game(self, agent, context, topic):
@@ -197,7 +199,6 @@ class DiscriminationGame(Interaction):
 	def learning_after(self, agent, topic, succ, ctopic = None):
 
 		succ_rate = DS_A(agent)
-		#print succ_rate
 		sensed_topic = agent.sense(topic)
 		
 		if succ:
@@ -211,7 +212,7 @@ class DiscriminationGame(Interaction):
 		else:
 			agent.state.classifier.add_category(sensed_topic)
 		
-		# lower streanght of memory - jak kolwiek to sie pisze
+		# lower strength of memory
 		agent.state.classifier.forgetting()
 		
 	
@@ -227,7 +228,7 @@ class DiscriminationGame(Interaction):
 	
 	def play_save(self, agent, context, topic):
 		succ, ctopic = self.disc_game(agent, context, topic)
-		self.save(agent, succ)
+		self.save_result(agent, succ)
 		return succ, ctopic
 
 
@@ -236,7 +237,7 @@ class DiscriminationGame(Interaction):
 			self.play_with_learning(agent, context, topic)
 		
 		#agent.add_inter_result(("DG", succ))
-		self.save(agent, succ)
+		self.save_result(agent, succ)
 		return succ, ctopic, topic, context 
 		
 	def interact(self, agent1, agent2):
@@ -247,6 +248,8 @@ class DiscriminationGame(Interaction):
 		topic = random.choice(context)
 		succ1, _, _, _ = self.play_with_learning(agent1, context, topic)
 		succ2, _, _, _ = self.play_with_learning(agent2, context, topic)
+		self.save_result(agent1, succ1)
+		self.save_result(agent2, succ2)
 		return (("DG", succ1), ("DG", succ2))
 
 
@@ -265,6 +268,9 @@ class GuessingGame(Interaction):
 	def num_agents(self):
 		return 2
 
+
+	def save_result(self, agent, result):
+		agent.add_payoff("GG", int(result))
 	
 
 	def learning_after(self, speaker, hearer, succ, sp_topic, he_topic, word, topic):
@@ -347,6 +353,8 @@ class GuessingGame(Interaction):
 
 	def interact(self, speaker, hearer):
 		r = self.guess_game(speaker, hearer)
+		self.save_result(speaker, r)
+		self.save_result(hearer, r)
 		return (("GG", r), ("GG", r))
 
 
@@ -394,9 +402,6 @@ def steels_uniwersal_basic_experiment(num_iter, agents, environments, interactio
 	from cog_abm.core import Environment, Simulation
 	from pygraph.algorithms.generators import generate
 
-#	from cog_abm.core.simulation import Simulation
-
-
 	num_agents = len(agents)
 	topology = def_value(topology, 
 	                     generate(num_agents, num_agents*(num_agents-1)/2))
@@ -428,18 +433,14 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 			environments = None, interaction_type="DG", beta = 1., context_size = 4,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None, stimuli = None):
 	
-
-	from cog_abm.agent.sensor import SimpleSensor
-#	from cog_abm.extras.fitness import get_buffered_average
-	
 	environments = def_value(environments, {})
 	classifier, classif_arg = convert_to_classifier_steels(classifier)
 
-	#niestety narazie tak 
+	# FIX THIS !!
 	for agent in agents:
 		agent.set_state(SteelsAgentState(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
-#		agent.set_fitness_measure("DS", get_buffered_average(50))
+		agent.set_fitness_measure("DG", metrics.get_DS_measure())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
 	AdaptiveNetwork.def_beta = float(beta)
@@ -454,22 +455,18 @@ def steels_basic_experiment_DG(inc_category_treshold = 0.95, classifier = None,
 def steels_basic_experiment_GG(inc_category_treshold = 0.95, classifier = None, 
 			environments = None, interaction_type="GG", beta = 1., context_size = 4,
 			agents = None, dump_freq = 50, alpha = 0.1, sigma = 1., num_iter = 1000, topology = None):
-	
-	from cog_abm.agent.sensor import SimpleSensor
-#	from cog_abm.extras.fitness import get_buffered_average
-
 
 	environments = def_value(environments, {})
 	classifier, classif_arg = convert_to_classifier_steels(classifier)
 	#agents = [Agent(SteelsAgentStateWithLexicon(classifier()), SimpleSensor())\
 
-	#niestety narazie tak 
+	# FIX THIS !!
 	classif_arg = def_value(classif_arg, [])
 	for agent in agents:
 		agent.set_state(SteelsAgentStateWithLexicon(classifier(*classif_arg)))
 		agent.set_sensor(SimpleSensor())
-#		agent.set_fitness_measure("DS", get_buffered_average(50))
-#		agent.set_fitness_measure("CS", get_buffered_average(50))
+		agent.set_fitness_measure("DG", metrics.get_DS_measure())
+		agent.set_fitness_measure("GG", metrics.get_CS_fitness())
 	
 	AdaptiveNetwork.def_alpha = float(alpha)
 	AdaptiveNetwork.def_beta = float(beta)

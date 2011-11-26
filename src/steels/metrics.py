@@ -3,22 +3,20 @@ This module implements measurements used in evaluating the outcome of the
 experiment.
 """
 import math
-from itertools import ifilter, imap, combinations
+from itertools import combinations
+from cog_abm.extras.fitness import get_buffered_average
 
+WINDOW_SIZE = 50
 
-window_size = 50
-#window_size = 1<<50
+def get_DS_measure():
+	return get_buffered_average(WINDOW_SIZE)
+
+def get_CS_fitness():
+	return get_buffered_average(WINDOW_SIZE)
+
 
 def DS_A(agent):
-
-	w = filter(lambda (id, w):id == "DG", agent.inter_res)
-
-	if len(w) == 0:
-		return 0.
-	
-	w = w[max(0, len(w)-window_size) : ]
-	return math.fsum(imap(lambda r:r[1], w))/len(w)
-
+	return agent.get_fitness("DG")
 
 def DS(agents, it):
 	if it == 0:
@@ -26,16 +24,8 @@ def DS(agents, it):
 	return math.fsum([DS_A(a) for a in agents])/len(agents)
 
 
-
 def CS_A(agent):
-
-	w = filter(lambda (id, w):id == "GG", agent.inter_res)
-
-	if len(w) == 0:
-		return 0.
-	
-	w = w[max(0, len(w)-window_size) : ]
-	return math.fsum(imap(lambda r:r[1], w))/len(w)
+	return agent.get_fitness("GG")
 
 def CS(agents, it):
 	if it == 0:

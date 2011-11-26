@@ -1,3 +1,6 @@
+"""
+Provides tools to measure performance of agents/classifiers
+"""
 from tools import abstract
 
 
@@ -9,7 +12,6 @@ class FitnessMeasure(object):
 #    This is optional- needed only when buffering
     def update_removed(self, payoff, weight = 1.):
         abstract()
-
     
     def get_fitness(self):
         abstract()
@@ -76,7 +78,6 @@ class BufferedFitnessMeasure(FitnessMeasure):
         return self.fm.get_fitness()
     
 
-
 class AverageFitnessMeasure(FitnessMeasure):
     
     def __init__(self):
@@ -90,10 +91,8 @@ class AverageFitnessMeasure(FitnessMeasure):
     def update_removed(self, payoff, weight = 1.):
         # little trick :)
         self.add_payoff(payoff, -weight)
-        
 
     def get_fitness(self):
-        print self.sum, self.wsum
         if self.wsum == 0.:
             return 0.
         return self.sum / self.wsum

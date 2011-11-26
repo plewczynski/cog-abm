@@ -33,7 +33,7 @@ def default_params():
 					'classifier' : None,
 					'alpha' : 0.1, 
 					'beta' : 1., 
-					'sigma' : 1., 
+					'sigma' : 10., 
 					'inc_category_treshold' : 0.95
 				}
 

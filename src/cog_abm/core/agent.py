@@ -60,8 +60,12 @@ class Agent(object):
 		"""
 		return self.sensor.sense(stimulus)
 
+	# 'sense' is in name to make clear what happens
 	def sense_and_classify(self, stimulus):
 		return self.state.classify(self.sense(stimulus))
+	
+	def sense_and_classify_pval(self, stimulus):
+		return self.state.classify_pval(self.sense(stimulus))
 
 	def __str__(self):
 		return "Agent("+str(self.id)+":"+str(self.state)+")"

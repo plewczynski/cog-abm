@@ -96,7 +96,7 @@ class AgentData(object):
 		#print key, category_set, values
 		for val in values:
 			strength = agent.state.sample_strength(key, 
-			                                       self.cielab[val].content)
+			                                       self.cielab[val])
 			if strength > max:
 				max = strength
 				focal = val
@@ -122,7 +122,7 @@ class AgentDataWithLanguage(AgentData):
 		if (iter == 0):
 			return
 		dictionary = {}
-		category_set = [agent.state.classify(stimuli.content) 
+		category_set = [agent.state.classify(stimuli) 
 		                for stimuli in self.cielab]
 		#print category_set
 

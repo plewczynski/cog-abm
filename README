@@ -102,5 +102,5 @@ Required librares (easy to install with pip):
 * progressbar
 * matplotlib (for charts)
 * grapefruit (built in?)
-* pygraph (built in)
+* pygraph (named python-graph-core)
 

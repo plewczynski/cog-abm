@@ -124,17 +124,14 @@ class Lexicon(object):
 		
 	
 	def decrease(self, category, word):
-		#w = self.base.pop((category, word), 0) - Lexicon.delta_dec
-		#print category, str(word) , "\n", self
-
 		w = self.base.pop((category, word)) - Lexicon.delta_dec
 		if w>0.:
 			self.base[(category, word)] = w
-		#moga zostac nieuzywane slowa w self.F
+		# ther is possibility that some unused word will stay in self.F
+		# FIX THIS ^^^^^ ?
 
 
 	def _decreaser(self, choser, key):
-#		print str(key[0]), str(key[1]), "\n", self
 
 		tmp = self.base.pop(key)
 		remove = []

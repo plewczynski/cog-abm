@@ -94,7 +94,7 @@ class AdaptiveNetwork(object):
 	
 	def increase_sample(self, sample):
 		self._update_units(lambda u, w:
-						(u, min(1.,w+float(self.beta)*u.value_for(sample))))
+						(u, min(1.,w + self.beta * u.value_for(sample))))
 					# because we don't want to exceed 1
 	
 	

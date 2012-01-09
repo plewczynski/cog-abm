@@ -1,5 +1,5 @@
 """
-Module with usefull functions and constants
+Module with useful functions and constants
 """
 
 from itertools import imap, izip
@@ -16,3 +16,12 @@ def abstract():
     import inspect
     caller = inspect.getouterframes(inspect.currentframe())[1][3]
     raise NotImplementedError(caller + ' must be implemented in subclass')
+
+
+def get_progressbar(title=None):
+    from progressbar import ProgressBar, Percentage, Bar, ETA, Timer
+    widgets = [Percentage(), Timer(), Bar(), ETA()]
+    if title is not None:
+        widgets = [title] + widgets
+    
+    return ProgressBar(widgets=widgets)

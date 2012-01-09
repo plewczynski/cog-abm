@@ -3,12 +3,12 @@ Module providing flow control in simulation
 """
 import random
 import logging
-from itertools import izip
 from time import time
 import copy
 import cPickle
-from progressbar import ProgressBar, Percentage, Bar, ETA
+from ..extras.tools import get_progressbar
 
+log = logging.getLogger('COG-ABM')
 
 
 class Simulation(object):
@@ -24,7 +24,7 @@ class Simulation(object):
 		self.interaction = interaction
 		self.agents = tuple(agents)
 		self.statistic = []
-		#self.
+		self.dump_often = False
 	
 
 	def dump_results(self, iter_num):
@@ -32,9 +32,10 @@ class Simulation(object):
 		#cc = [a.deepcopy() for a in self.agents]
 		kr = (iter_num, cc)
 		self.statistic.append(kr)
-		f = open(str(iter_num)+".pout", "wb")
-		cPickle.dump(kr, f)
-		f.close()
+		if self.dump_often:
+			f = open(str(iter_num)+".pout", "wb")
+			cPickle.dump(kr, f)
+			f.close()
 	
 	
 	def _choose_agents(self):
@@ -59,26 +60,30 @@ class Simulation(object):
 			agents = self._choose_agents()
 			self._start_interaction(agents)
 
-		
+	def _do_main_loop(self, iterations, dump_freq):
+		start_time = time()
+		log.info("Simulation start...")
+		pb = get_progressbar()
+		for i in pb(xrange(iterations//dump_freq)):
+			self._do_iterations(dump_freq)
+			self.dump_results((i+1)*dump_freq)
 
-	def run(self, iterations = 1000, dump_freq = 10):
+		log.info("Simulation end. Total time: "+str(time()-start_time))
+			
+		
+	def continue_(self, iterations=1000, dump_freq=10):
+		self._do_main_loop(iterations, dump_freq)
+		return self.statistic
+	
+
+	def run(self, iterations=1000, dump_freq=10):
 		"""
 		Begins simulation.
 		
 		iterations
 		"""
-		start_time = time()
-		logging.info("Simulation start...")
-		
 		self.dump_results(0)
-		pb = ProgressBar(widgets=[Percentage(), Bar(), ETA()])
-		for i in pb(xrange(iterations//dump_freq)):
-			self._do_iterations(dump_freq)
-			self.dump_results((i+1)*dump_freq)
-		
-		logging.info("Simulation end. Total time: "+str(time()-start_time))
+		self._do_main_loop(iterations, dump_freq)
 		return self.statistic
 			
 
-	
-#	def continue_experiment(self, iterations = 1000, dump_freq = 10):

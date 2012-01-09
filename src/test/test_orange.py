@@ -45,14 +45,14 @@ class TestOrange(unittest.TestCase):
         classifier = self.knn1
 #        classifier = self.tree
         classifier.train(train_set)
-        expected = [ 0, 0, 0, 1, 1, 1, 0, 1]
+        expected = [str(x) for x in [ 0, 0, 0, 1, 1, 1, 0, 1]]
         samples = [s for s in train_set]
         samples.extend([Sample([1, 0, 0], meta), Sample([2, 1, 0], meta)])
         for e, s in izip(expected, samples):
             self.assertEqual(e, classifier.classify(s))
-        
-        
-#    def test_to_help(self):
-#        
-#        
-#        
+            k, p = classifier.classify_pval(s)
+            self.assertTrue(0.<= p <= 1.)
+            self.assertEqual(k, classifier.classify(s))
+            p2 = classifier.class_probabilities(s)
+            self.assertAlmostEqual(1., sum(p2.values()), delta=0.00001)
+

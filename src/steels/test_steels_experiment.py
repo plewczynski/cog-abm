@@ -1,7 +1,5 @@
-
-
 import unittest
-import random
+
 from steels_experiment import *
 from cog_abm.ML.core import Sample
 
@@ -61,9 +59,10 @@ class TestAdaptiveNetwork(unittest.TestCase):
 	
 	
 	def test__index_of(self):
-		self.assertEqual(-1,  self.an._index_of(ReactiveUnit([6, 6, 6])))
-		self.assertEqual(1,  self.an._index_of(ReactiveUnit([1, 1, 1, 1])))
-		self.assertEqual(-1,  AdaptiveNetwork()._index_of(ReactiveUnit([23, 4])))
+		self.assertEqual(-1, self.an._index_of(ReactiveUnit([6, 6, 6])))
+		self.assertEqual(1, self.an._index_of(ReactiveUnit([1, 1, 1, 1])))
+		self.assertEqual(-1,
+						AdaptiveNetwork()._index_of(ReactiveUnit([23, 4])))
 	
 	
 	def test_add_reactive_unit(self):
@@ -79,7 +78,7 @@ class TestAdaptiveNetwork(unittest.TestCase):
 		an = AdaptiveNetwork(self.sample)
 		for _ in xrange(self.N):
 			pack = [random.randint(0, 10) for _ in range(4)]
-			out = math.fsum([w*ru.value_for(pack) for ru, w in self.sample])		
+			out = np.array([w*ru.value_for(pack) for ru, w in self.sample]).sum()
 			self.assertEqual(an.reaction(pack), out)
 	
 	
@@ -143,13 +142,21 @@ class TestSteelsClassifier(unittest.TestCase):
 			self.sc.add_category(s)
 
 
-	def test_add_category(self):
-		pass
+	def test_add_remove_category(self):
+		self._init()
+		self.sc.add_category(self.samples[0], 0)
+		self.assertTrue(self.sc.categories.has_key(0))
+		self.sc.del_category(0)
+		self.assertFalse(self.sc.categories.has_key(0))
 	
 	
 	def test_remove_category(self):
 		pass
 	
+	def test_wrong_classify(self):
+		self._init()
+		self.sc.categories = {}
+		self.assertEqual(None, self.sc.classify(self.samples[0]))
 	
 	def test_classify_for_peeks(self):
 		self._init()

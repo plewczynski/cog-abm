@@ -9,10 +9,10 @@ from cog_abm.ML.statistics import *
 class TestStatistics(unittest.TestCase):
     
     def setUp(self):
-        self.meta = [NumericAttribute, NominalAttribute([0,1])]
+        self.meta = [NumericAttribute(), NominalAttribute([0, 1])]
         self.samples = [Sample([i, 0], self.meta, last_is_class=True) 
                         for i in xrange(10)] + \
-                        [Sample([i,1], self.meta, last_is_class=True)
+                        [Sample([i, 1], self.meta, last_is_class=True)
                          for i in xrange(10,15)]
         
         self.classifiers = tuple(StupidClassifer(i) for i in xrange(2))
@@ -77,8 +77,11 @@ class TestStatistics(unittest.TestCase):
 
     def test_MCC(self):
         self.do_tst([0., 0.], MCC)
+    
+    def test_correct(self):
+        self.do_tst([2./3, 1./3.], lambda cl, s, _: correct(cl,s))
         
-
+    @unittest.skip("Not implemented yet!")
     def test_AUC(self):
         self.do_test(["NOT IMPLEMENTED"], AUC)
         

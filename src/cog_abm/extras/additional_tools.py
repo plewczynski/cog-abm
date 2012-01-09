@@ -2,6 +2,8 @@
 
 from ..core.network import Network
 from ..core.interaction import Interaction
+from ..core.agent import Agent
+
 from pygraph.algorithms.generators import generate
 
 
@@ -17,7 +19,7 @@ def generate_simple_network(agents):
     
 
   
-from cog_abm.core.agent import Agent
+
 
 def generate_network_with_agents(n):
     agents = [Agent(aid=i) for i in xrange(n)]
@@ -65,9 +67,10 @@ class StupidClassifer(Classifier):
     """
     
     def __init__(self, cls = 0):
-        self.cls = cls
+        self.cls = str(cls)
     
     
     def classify(self, sample):
         return self.cls
-    
+
+

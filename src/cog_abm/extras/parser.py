@@ -184,15 +184,14 @@ class Parser(object):
 		
 		params = self.return_element_if_exist(main_sock, "params", False)
 		
-		environment = None
+		chooser = None
 		if params is not None:
 			dist = self.return_if_exist(params, "distance", "value", float)
-			environment = Environment(list_of_stimuli, use_distance = True,
-								distance = dist)
+			chooser = RandomStimuliChooser(use_distance=True, distance=dist)
 		else:
-			environment = Environment(list_of_stimuli)
+			chooser = RandomStimuliChooser()
 		
-		return environment
+		return Environment(list_of_stimuli, chooser)
 		
 	def parse_discrimination_game(self, inter):
 		params = self.return_element_if_exist(inter, "params", False)

@@ -1,5 +1,3 @@
-import sys
-sys.path.append('../')
 import unittest
 from cog_abm.ML.core import *
 

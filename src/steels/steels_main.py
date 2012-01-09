@@ -12,12 +12,12 @@ def save_res(results, f_name = None):
 	f.close()
 
 
-def load_params(file):
-	if file is None:
+def load_params(pfile):
+	if pfile is None:
 		return default_params()
 	
 	from cog_abm.extras.parser import Parser
-	return Parser().parse_simulation(file)
+	return Parser().parse_simulation(pfile)
 	
 
 	

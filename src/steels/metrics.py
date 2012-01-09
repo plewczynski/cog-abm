@@ -6,9 +6,10 @@ import math
 from itertools import combinations
 from cog_abm.extras.fitness import get_buffered_average
 
+#WINDOW_SIZE = 20
 WINDOW_SIZE = 50
 
-def get_DS_measure():
+def get_DS_fitness():
 	return get_buffered_average(WINDOW_SIZE)
 
 def get_CS_fitness():

@@ -3,11 +3,15 @@
 import sys
 import logging
 import cPickle
-from time import time
-sys.path.append('../')
-from itertools import imap
 import math
-from progressbar import ProgressBar, Percentage, Bar, ETA
+
+from itertools import imap
+from time import time
+
+sys.path.append('../')
+
+from cog_abm.extras.tools import get_progressbar
+
 
 
 def compose(fun_out, fun_in):
@@ -36,7 +40,10 @@ cc_computed = {}
 def count_categ(agents, params, it):
 
 	global cc_computed
-	stimuli = params['environments']['global'].stimuli
+	try:
+		stimuli = params['environments']['global'].stimuli
+	except:
+		stimuli = params['STIMULI']
 	
 	def pom(a):
 		Z = {}
@@ -84,7 +91,7 @@ def gen_res(results, params, funs):
 	start_time = time()
 	logging.info("Calculating stats...")
 
-	pb = ProgressBar(widgets=[Percentage(), Bar(), ETA()])	
+	pb = get_progressbar()	
 	retv = [[x for f in funs for x in f(agents, params, it)]
 					for it, agents in pb(results)]
 

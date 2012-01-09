@@ -1,8 +1,8 @@
-
-from math import sqrt
+import math
 
 
 def calc_basic_rates(classifier, samples, positive_class):
+	positive_class = str(positive_class)
 	sc = [(s, s.get_cls()) for s in samples]
 	positive = [s for s,c in sc if c == positive_class]
 	negative = [s for s,c in sc if c != positive_class]
@@ -10,7 +10,6 @@ def calc_basic_rates(classifier, samples, positive_class):
 	fp = [classifier.classify(s) for s in negative].count(positive_class)
 	tn = len(negative) - fp
 	fn = len(positive) - tp
-
 	return tuple( float(x) for x in (tp, tn, fp, fn))
 
 
@@ -83,10 +82,16 @@ def FDR(classifier, samples, positive_class, basic_rates = None):
 def MCC(classifier, samples, positive_class, basic_rates = None):
 	tp, tn, fp, fn = basic_rates
 	return (tp*tn - fp*fn) / \
-		sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))
+		math.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))
 
 
 @basic_rates_based
 def AUC(classifier, samples, positive_class, basic_rates = None):
 	# Not implemented yet
 	return None
+
+
+def correct(classifier, samples):
+	return math.fsum([int(classifier.classify(s)==s.get_cls())
+											 for s in samples])/len(samples)
+

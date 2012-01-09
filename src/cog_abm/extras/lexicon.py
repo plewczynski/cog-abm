@@ -2,6 +2,7 @@ import random
 
 from tools import *
 from itertools import groupby
+from collections import deque
 
 
 class Syllable:
@@ -38,15 +39,20 @@ class Word(object):
 		self.syllables = syllables
 		
 	def __eq__(self, other):
+		if other is None:
+			return False
 		#if isinstance(other, Word):
 		return self.syllables == other.syllables
 		#return False
 	
 	def __ne__(self, other):
-		return not self == other
+		return not self.__eq__(other)
 
 	def __str__(self):
 		return "".join([str(s) for s in self.syllables])
+	
+	def __repr__(self):
+		return str(self)
 	
 	@staticmethod
 	def set_max_len(n):
@@ -84,7 +90,7 @@ class Lexicon(object):
 		if base is None:
 			base = {}
 		self.base = base
-		self.F = []	# words
+		self.F = set()	# words
 
 	
 	
@@ -96,7 +102,7 @@ class Lexicon(object):
 			word = Word.get_random_not_in(self.F)
 		
 		if word not in self.F:
-			self.F.append(word)
+			self.F.add(word)
 		
 		self.base[(category, word)] = weight
 		return word
@@ -131,31 +137,47 @@ class Lexicon(object):
 		# FIX THIS ^^^^^ ?
 
 
-	def _decreaser(self, choser, key):
+	def _decreaser(self, choser):
 
-		tmp = self.base.pop(key)
-		remove = []
+		remove = deque()
+		update = deque()
+		
 		for k, v in self.base.iteritems():
 			if choser(k):
 				w = v - Lexicon.delta_inh
 				if w>0.:
-					self.base[k] = w
+					update.append((k, w))
 				else:
 					remove.append(k)
 		
 		for k in remove:
-			self.base.pop(k)
+			del self.base[k]
 		
-		self.base[key] = min(tmp+Lexicon.delta_inc, 1.)
+		for k, v in update:
+			self.base[k] = v
 		
 		
-	def increase_word(self, category, word):
-		self._decreaser(lambda k: k[1] == word, (category, word))
+	def inc_dec_categories(self, category, word):
+		w = self.base.pop((category, word)) + self.delta_inc
+		self._decreaser(lambda k: k[1] == word)
+		self.base[(category, word)] = w
 	
-	
-	def increase_category(self, category, word):
-		self._decreaser(lambda k: k[0] == category, (category, word))
+	def inc_dec_words(self, category, word):
+		w = self.base.pop((category, word)) + self.delta_inc
+		self._decreaser(lambda k: k[0] == category)
+		self.base[(category, word)] = w
 		
+	def increase_pair_decrease_other(self, category, word):
+		w = self.base.pop((category, word)) + self.delta_inc
+		self._decreaser(lambda k: k[1] == word)
+		self._decreaser(lambda k: k[0] == category)
+		self.base[(category, word)] = min(w, 1.)
+
+	def known_words(self):
+		known = set()
+		for _, w in self.base.iterkeys():
+			known.add(w)
+		return known
 	
 	def __str__(self):
 		

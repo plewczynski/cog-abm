@@ -2,11 +2,11 @@
 Module providing classifiers from orange library
 """
 
-import orange
+import orange, orngSVM, orngEnsemble
 import core
 from itertools import izip
 
-
+orange_learners_modules = [orange, orngSVM, orngEnsemble]
 #useful methods
 
 def create_numeric_variable(sid, meta):
@@ -48,12 +48,30 @@ def convert_sample_with_cls(domain, sample):
     return orange.Example(domain, tmp + [domain.classVar(sample.get_cls())])
     
 
+def get_orange_classifier_class(name, module=None):
+    if module is None:
+        for module in orange_learners_modules:
+            try:
+                classifier_class = getattr(module, name)
+                return classifier_class
+            except AttributeError:
+                pass
+        return None
+    else:
+        module = __import__(module)
+        # TODO i think that this won't work if module contains dot
+        return getattr(module, name)
+
+
 
 class OrangeClassifier(core.Classifier):
     
     
     def __init__(self, name, *args, **kargs):
-        self.classifier_class = getattr(orange, name)
+        self.classifier_class = get_orange_classifier_class(name,
+                                        module=kargs.get('module', None))
+        if self.classifier_class is None:
+            raise ValueError("No %s learner in orange libs", name)
         self.classifier_args = args
         self.classifier_kargs = kargs
         self.classifier = self.classifier_class(*args, **kargs)
@@ -61,16 +79,30 @@ class OrangeClassifier(core.Classifier):
         self.domain = None
         
     
+    def _extract_value(self, cls):
+        return cls.value
+    
     def classify(self, sample):
         s = convert_sample(self.domain_with_cls, sample)
-        return self.classifier(s)
+        return self._extract_value(self.classifier(s))
     
     
     # TODO: I think that parent method should be fine 
 #    def clone(self):
 #        return None  
 
+    def classify_pval(self, sample):
+        s = convert_sample(self.domain_with_cls, sample)
+        v, p = self.classifier(s, orange.GetBoth)
+        return (self._extract_value(v), p[v])
+
+    def class_probabilities(self, sample):
+        s = convert_sample(self.domain_with_cls, sample)
+        probs = self.classifier(s, orange.GetProbabilities)
+        d = dict(probs)
+        return d
     
+        
     def train(self, samples):
         """
         Trains classifier with given samples.
@@ -83,7 +115,10 @@ class OrangeClassifier(core.Classifier):
         et = orange.ExampleTable(self.domain_with_cls)
         et.extend([convert_sample_with_cls(self.domain_with_cls, s) 
                                 for s in samples])
-        
-        self.classifier = self.classifier_class(et, *self.classifier_args, \
+        self.classifier = self.classifier_class(*self.classifier_args,\
                                                 **self.classifier_kargs)
+        self.classifier = self.classifier(et)
+
+#        self.classifier = self.classifier_class(et, *self.classifier_args,\
+#                                                **self.classifier_kargs)
 

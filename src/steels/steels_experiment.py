@@ -261,21 +261,26 @@ class DiscriminationGame(Interaction):
 		
 		#agent.add_inter_result(("DG", succ))
 		self.save_result(agent, succ)
-		return succ, ctopic, topic, context 
-		
-	def interact(self, agent1, agent2):
-		
-		env = agent1.get_environment()
+		return succ, ctopic, topic, context
+	
+	def get_setup(self, agent):
+		env = agent.get_environment()
 		context = env.get_stimuli(self.context_len)
-		
 		topic = context[0]
 		# ^^^^ they are already shuffled - and needed when different classes
-		succ1, _, _, _ = self.play_with_learning(agent1, context, topic)
-		succ2, _, _, _ = self.play_with_learning(agent2, context, topic)
-		self.save_result(agent1, succ1)
-		self.save_result(agent2, succ2)
-		return (("DG", succ1), ("DG", succ2))
-
+		return (context, topic)
+	
+	def interact_one_agent(self, agent, context=None, topic=None):
+		if context is None or topic is None:
+			context, topic = self.get_setup(agent)
+		succ, _, _, _ = self.play_with_learning(agent, context, topic)
+		self.save_result(agent, succ)
+		return succ
+		
+	def interact(self, agent1, agent2):
+		context, topic = self.get_setup(agent1)
+		return (("DG", self.interact_one_agent(agent1, context, topic)),
+			 		("DG", self.interact_one_agent(agent2, context, topic)))
 
 
 class GuessingGame(Interaction):
@@ -426,10 +431,14 @@ class SteelsAgentState(object):
 	def __init__(self, classifier):
 		self.classifier = classifier
 
-
 	def classify(self, sample):
 		return self.classifier.classify(sample)
 
+	def classify_pval(self, sample):
+		return self.classifier.classify_pval(sample)
+
+	def class_probabilities(self, sample):
+		return self.classifier.class_probabilities(sample)
 
 	def sample_strength(self, category, sample):
 		return self.classifier.sample_strength(category, sample)

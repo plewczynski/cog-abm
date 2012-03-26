@@ -1,10 +1,8 @@
 """
 Most useful things connected with ML
 """
-from itertools import izip
-from cog_abm.extras.tools import def_value
 import math
-
+from itertools import izip
 
 class Classifier(object):
 	
@@ -38,7 +36,6 @@ class Classifier(object):
 		return copy.deepcopy(self)
 
 
-
 class Attribute(object):
 	
 	ID = None
@@ -48,14 +45,11 @@ class Attribute(object):
 	def get_value(self, value):
 		pass
 	
-	
 	def set_value(self, value):
 		return value
 	
-	
 	def __eq__(self, other):
 		return self.ID==other.ID
-
 
 
 class NumericAttribute(Attribute):
@@ -66,7 +60,6 @@ class NumericAttribute(Attribute):
 		return value
 
 
-	
 class NominalAttribute(Attribute):
 	
 	ID = "NominalAttribute"
@@ -82,18 +75,14 @@ class NominalAttribute(Attribute):
 #		for i, s in enumerate(symbols):
 #			self.mapping[s] = i
 
-
 	def get_symbol(self, idx):
 		return self.symbols[idx]
 	
-
 	def get_idx(self, symbol):
 		return self.mapping[str(symbol)]
 	
-
 	def get_value(self, value):
 		return self.get_symbol(value)
-	
 	
 	def set_value(self, value):
 		if str(value) in self.symbols:
@@ -103,21 +92,17 @@ class NominalAttribute(Attribute):
 		else:
 			raise LookupError("Couldn't set attribute to: "+str(value))
 
-		
 	def __eq__(self, other):
 		return super(NominalAttribute, self).__eq__(other) and \
 			set(self.symbols)==set(other.symbols)
 
 
-
 class Sample(object):
-	
 	
 	def __init__(self, values, meta=None, cls=None, cls_meta=None,
 						dist_fun=None, last_is_class=False, cls_idx=None):
 		self.values = values[:]
-		self.meta = def_value(meta,
-						[NumericAttribute() for _ in xrange(len(values))])
+		self.meta = meta or [NumericAttribute() for _ in xrange(len(values))]
 		
 		if last_is_class or cls_idx is not None:
 			if last_is_class:
@@ -142,21 +127,17 @@ class Sample(object):
 		else:
 			self.dist_fun = dist_fun
 	
-	
 	def get_cls(self):
 		if self.cls_meta is None or self.cls is None:
 			return None
 		
 		return self.cls_meta.get_value(self.cls)
 
-
 	def get_values(self):
 		return [m.get_value(v) for v, m in izip(self.values, self.meta)]
 
-
 	def distance(self, other):
 		return self.dist_fun(self, other)
-	
 	
 	def __eq__(self, other):
 		return self.cls==other.cls and self.cls_meta==other.cls_meta and \
@@ -171,14 +152,13 @@ class Sample(object):
 	def __repr__(self):
 		return str(self)
 	
-	
 	def copy_basic(self):
 		return Sample(self.values, self.meta, dist_fun=self.dist_fun)
 	
 	def copy_full(self):
 		return Sample(self.values, self.meta, self.cls, self.cls_meta,
 																self.dist_fun)
-	
+
 	def copy_set_cls(self, cls, meta):
 		s = self.copy_basic()
 		s.cls_meta = meta
@@ -191,7 +171,6 @@ def euclidean_distance(sx, sy):
 	return math.sqrt(math.fsum([
 		(x-y)*(x-y) for x, y in izip(sx.get_values(), sy.get_values())
 		]))
-
 
 
 from scipy.io.arff import loadarff

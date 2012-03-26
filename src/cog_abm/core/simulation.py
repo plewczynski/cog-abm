@@ -19,7 +19,7 @@ class Simulation(object):
 	global_environment = None
 	environments = {}
 	
-	def __init__(self,  graph = None,  interaction = None,  agents = None):
+	def __init__(self,  graph=None,  interaction=None,  agents=None):
 		self.graph = graph
 		self.interaction = interaction
 		self.agents = tuple(agents)

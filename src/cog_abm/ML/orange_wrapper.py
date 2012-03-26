@@ -76,13 +76,14 @@ class OrangeClassifier(core.Classifier):
         self.classifier_kargs = kargs
         self.classifier = self.classifier_class(*args, **kargs)
         self.domain_with_cls = None
-        self.domain = None
         
     
     def _extract_value(self, cls):
         return cls.value
     
     def classify(self, sample):
+        if self.domain_with_cls is None:
+            return None
         s = convert_sample(self.domain_with_cls, sample)
         return self._extract_value(self.classifier(s))
     
@@ -92,14 +93,18 @@ class OrangeClassifier(core.Classifier):
 #        return None  
 
     def classify_pval(self, sample):
+        if self.domain_with_cls is None:
+            return None
         s = convert_sample(self.domain_with_cls, sample)
         v, p = self.classifier(s, orange.GetBoth)
         return (self._extract_value(v), p[v])
 
     def class_probabilities(self, sample):
+        if self.domain_with_cls is None:
+            return None
         s = convert_sample(self.domain_with_cls, sample)
         probs = self.classifier(s, orange.GetProbabilities)
-        d = dict(probs)
+        d = dict(probs.items())
         return d
     
         
@@ -109,6 +114,9 @@ class OrangeClassifier(core.Classifier):
         
         We recreate domain, because new class could be added
         """
+        if not samples:
+            self.domain_with_cls = None
+            return
         meta = samples[0].meta
         cls_meta = samples[0].cls_meta
         self.domain_with_cls = create_domain_with_cls(meta, cls_meta)

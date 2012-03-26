@@ -1,4 +1,5 @@
 from ..extras.tools import abstract
+from ..ML.diversity import new_sample_specified_attributes
 
 class Sensor(object):
     """ Basic sensor.
@@ -9,9 +10,13 @@ class Sensor(object):
 
 
 class SimpleSensor(Sensor):
-	""" Just gives back what he got """
-	
-	def sense(self, item):
-		return item
+    """ Just gives back what he got """
+    
+    def __init__(self, mask=None):
+        self.mask = mask
 
-
+    def sense(self, item):
+        if self.mask is None:
+            return item
+        else:
+            return new_sample_specified_attributes(item, self.mask)

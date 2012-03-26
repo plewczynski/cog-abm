@@ -67,6 +67,9 @@ class Agent(object):
 	def sense_and_classify_pval(self, stimulus):
 		return self.state.classify_pval(self.sense(stimulus))
 
+	def sense_and_class_probabilities(self, stimulus):
+		return self.state.class_probabilities(self.sense(stimulus))
+
 	def __str__(self):
 		return "Agent("+str(self.id)+":"+str(self.state)+")"
 	

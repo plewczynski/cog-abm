@@ -53,7 +53,25 @@ class SimpleInteraction(Interaction):
 
 from cog_abm.ML.core import Classifier
 
-class PerfectClassifer(Classifier):
+def extract_classes(samples):
+    return list(set((s.get_cls() for s in samples)))
+
+class SimpleClassifier(Classifier):
+
+    def classify_pval(self, sample):
+        return self.classify(sample), 1.
+
+    def class_probabilities(self, sample):
+        d = {}
+        for c in self.classes:
+            d[c] = 0.
+        d[self.classify(sample)] = 1.
+        return d
+
+    def train(self, samples):
+        self.classes = extract_classes(samples)
+
+class PerfectClassifer(SimpleClassifier):
     """ If given sample has class, it returns it
     """
     
@@ -61,15 +79,13 @@ class PerfectClassifer(Classifier):
         return sample.get_cls()
 
 
-
-class StupidClassifer(Classifier):
+class StupidClassifer(SimpleClassifier):
     """ Always returns the same class
     """
-    
+
     def __init__(self, cls = 0):
         self.cls = str(cls)
-    
-    
+
     def classify(self, sample):
         return self.cls
 

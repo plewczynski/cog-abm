@@ -1,6 +1,5 @@
-------------- 
 INTRODUCTION 
-------------- 
+============ 
 
 This software is intended to help in designing and running simulations involving agents and their cognitive capacities. 
 
@@ -21,16 +20,16 @@ In our research proposal we address two issues: the dynamics of categorization p
 
 
 
-------------- 
 USAGE 
-------------- 
+===== 
 
 To run this software you need Python in version 2.x (3.x is not supported). 
 
 There are mostly libraries which helps you develop your own simulations. Sample simulation you might find in src/steels/ folder. As of version 0.3 all parameters and configuration of simulations is stored in XML files.
 
 
-* Steels experiment
+Steels experiment
+-----------------
 An example experiment. It was described in work of Steels, L. and Belpaeme, T. (2005).
 Sample configuration is in files src/simulation.xml  and in src/simulation2.xml
 To run one go to src folder and run:
@@ -47,7 +46,8 @@ Options:
                         file with parameters
 
 
-* Analyzer 
+Analyzer
+--------
 Helps you analyze data generated during simulation. Normally it outputs data as table separated with tabulation, but with option -c you can change output to chart. Important thing: if you would like to see number of iteration when given statistic where taken you should specify to use statistic “it” (see examples)
 
 Usage: python analyzer.py [-c] [-v] -f FILE statistic1 statistic2 ... 
@@ -62,7 +62,8 @@ Options:
   --ylabel=YLABEL       Label of y-axis 
 
 
-* Presenter
+Presenter
+---------
 This program uses files with extension .pout . It presents agents categorization at given iteration. 
 To run it go to src/presenter
 Usage: munsell_palette.py [options]
@@ -80,9 +81,8 @@ Options:
                         Type true to show language sharing
 
 
---------------------------------------- 
-* Example of full “usage path”:
---------------------------------------- 
+Example of full “usage path”
+----------------------------
 
 Run simulation. From /src/steels run:
 python steels_main.py -p "simulation.xml" 
@@ -95,12 +95,12 @@ from /src/presenter run:
 python munsell_palette.py -d ../ -a 10 --findfocal strength_based -l t 
 
 
--------------------------------------
-Required librares (easy to install with pip):
-* numpy
-* scipy
-* progressbar
-* matplotlib (for charts)
-* grapefruit (built in?)
-* pygraph (named python-graph-core)
+Required librares (easy to install with pip)
+--------------------------------------------
+ * numpy
+ * scipy
+ * progressbar
+ * matplotlib (for charts)
+ * grapefruit (built in?)
+ * pygraph (named python-graph-core)
 

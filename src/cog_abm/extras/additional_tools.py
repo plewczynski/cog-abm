@@ -16,9 +16,9 @@ def generate_simple_network(agents):
 #        network.add_agent(a, i, a)
 #        network.add_agent(a, i, str(i))
     return network
-    
 
-  
+
+
 
 
 def generate_network_with_agents(n):
@@ -32,23 +32,23 @@ def generate_network_with_agents(n):
 class SimpleInteraction(Interaction):
     """ Very simple interaction. Just prints agents involved and takes time.
     """
-    
-    
+
+
     def __init__(self, num_agents = 2):
         self._num_agents = num_agents
-    
-    
+
+
     def num_agents(self):
         return self._num_agents
-    
-    
+
+
     def interact(self, *agents):
         import os
         print "Interaction with: "+str(agents)+ "  in: "+ str(os.getpid())
         for i in xrange(10**5):
             i**0.5
         return [i**0.1 for i in xrange(len(agents))]
-        
+
 
 
 from cog_abm.ML.core import Classifier
@@ -74,7 +74,7 @@ class SimpleClassifier(Classifier):
 class PerfectClassifer(SimpleClassifier):
     """ If given sample has class, it returns it
     """
-    
+
     def classify(self, sample):
         return sample.get_cls()
 
@@ -88,5 +88,3 @@ class StupidClassifer(SimpleClassifier):
 
     def classify(self, sample):
         return self.cls
-
-

@@ -23,7 +23,7 @@ def get_progressbar(title=None):
     widgets = [Percentage(), Timer(), Bar(), ETA()]
     if title is not None:
         widgets = [title] + widgets
-    
+
     return ProgressBar(widgets=widgets)
 
 

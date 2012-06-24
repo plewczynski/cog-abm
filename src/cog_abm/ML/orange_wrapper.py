@@ -21,7 +21,7 @@ orange_variable_map = {
                 }
 
 def create_basic_variables(meta):
-    return [orange_variable_map[m.ID]("atr"+str(i), m) 
+    return [orange_variable_map[m.ID]("atr"+str(i), m)
                 for i,m in enumerate(meta)]
 
 
@@ -29,11 +29,11 @@ def create_domain_with_cls(meta, cls_meta):
     l = create_basic_variables(meta)
     l.append(create_nominal_variable("classAttr",cls_meta))
     return orange.Domain(l, True)
-    
+
 
 
 def _basic_convert_sample(domain, sample):
-    return [orange.Value(dv, v) for dv, v in 
+    return [orange.Value(dv, v) for dv, v in
                     izip(domain, sample.get_values())]
 
 
@@ -46,7 +46,7 @@ def convert_sample(domain, sample):
 def convert_sample_with_cls(domain, sample):
     tmp = _basic_convert_sample(domain, sample)
     return orange.Example(domain, tmp + [domain.classVar(sample.get_cls())])
-    
+
 
 def get_orange_classifier_class(name, module=None):
     if module is None:
@@ -65,8 +65,8 @@ def get_orange_classifier_class(name, module=None):
 
 
 class OrangeClassifier(core.Classifier):
-    
-    
+
+
     def __init__(self, name, *args, **kargs):
         self.classifier_class = get_orange_classifier_class(name,
                                         module=kargs.get('module', None))
@@ -76,21 +76,21 @@ class OrangeClassifier(core.Classifier):
         self.classifier_kargs = kargs
         self.classifier = self.classifier_class(*args, **kargs)
         self.domain_with_cls = None
-        
-    
+
+
     def _extract_value(self, cls):
         return cls.value
-    
+
     def classify(self, sample):
         if self.domain_with_cls is None:
             return None
         s = convert_sample(self.domain_with_cls, sample)
         return self._extract_value(self.classifier(s))
-    
-    
-    # TODO: I think that parent method should be fine 
+
+
+    # TODO: I think that parent method should be fine
 #    def clone(self):
-#        return None  
+#        return None
 
     def classify_pval(self, sample):
         if self.domain_with_cls is None:
@@ -106,12 +106,12 @@ class OrangeClassifier(core.Classifier):
         probs = self.classifier(s, orange.GetProbabilities)
         d = dict(probs.items())
         return d
-    
-        
+
+
     def train(self, samples):
         """
         Trains classifier with given samples.
-        
+
         We recreate domain, because new class could be added
         """
         if not samples:
@@ -121,7 +121,7 @@ class OrangeClassifier(core.Classifier):
         cls_meta = samples[0].cls_meta
         self.domain_with_cls = create_domain_with_cls(meta, cls_meta)
         et = orange.ExampleTable(self.domain_with_cls)
-        et.extend([convert_sample_with_cls(self.domain_with_cls, s) 
+        et.extend([convert_sample_with_cls(self.domain_with_cls, s)
                                 for s in samples])
         self.classifier = self.classifier_class(*self.classifier_args,\
                                                 **self.classifier_kargs)
@@ -129,4 +129,3 @@ class OrangeClassifier(core.Classifier):
 
 #        self.classifier = self.classifier_class(et, *self.classifier_args,\
 #                                                **self.classifier_kargs)
-

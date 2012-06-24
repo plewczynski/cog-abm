@@ -8,10 +8,10 @@ from itertools import izip
 
 
 class TestOrange(unittest.TestCase):
-    
-    
+
+
     def setUp(self):
-        self.classifiers = [("BayesLearner",[],{}), 
+        self.classifiers = [("BayesLearner",[],{}),
                             ("TreeLearner",[],{}),
                             ("kNNLearner",[],{"k": 1}),
                             ("kNNLearner",[],{"k": 3}),
@@ -20,8 +20,8 @@ class TestOrange(unittest.TestCase):
         self.knn1 = OrangeClassifier(self.classifiers[2][0])
         self.knn3 = OrangeClassifier(self.classifiers[3][0])
         self.tree = OrangeClassifier(self.classifiers[4][0])
-    
-    
+
+
     def test_classifier_creation(self):
         """ Proper classifier creation """
 
@@ -29,8 +29,8 @@ class TestOrange(unittest.TestCase):
             classifier = OrangeClassifier(c, *args, **kargs)
             self.assertEqual(getattr(orange, c),
                              type(classifier.classifier))
-        
-    
+
+
     def test_classification(self):
         cls_meta = NominalAttribute([0,1])
         meta = [NumericAttribute() for _ in xrange(3)]
@@ -55,4 +55,3 @@ class TestOrange(unittest.TestCase):
             self.assertEqual(k, classifier.classify(s))
             p2 = classifier.class_probabilities(s)
             self.assertAlmostEqual(1., sum(p2.values()), delta=0.00001)
-

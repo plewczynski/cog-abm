@@ -5,7 +5,6 @@ from cog_abm.core.agent import *
 
 
 class TestMetrics(unittest.TestCase):
-	
-	def setUp(self):
-		pass
 
+    def setUp(self):
+        pass

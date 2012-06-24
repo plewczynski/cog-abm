@@ -51,5 +51,3 @@ class TestMultiClassif(unittest.TestCase):
         self.assertEqual(ml.classify(c), 1)
 if __name__ == '__main__':
     unittest.main()
-    
-    

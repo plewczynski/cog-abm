@@ -19,12 +19,15 @@ class Simulation(object):
     global_environment = None
     environments = {}
 
-    def __init__(self,  graph=None,  interaction=None,  agents=None):
+    def __init__(self,  graph=None,  interaction=None,  agents=None, pb=False):
+        ''' pb - show progress bar
+        '''
         self.graph = graph
         self.interaction = interaction
         self.agents = tuple(agents)
         self.statistic = []
         self.dump_often = False
+        self.pb = pb
 
 
     def dump_results(self, iter_num):
@@ -63,8 +66,10 @@ class Simulation(object):
     def _do_main_loop(self, iterations, dump_freq):
         start_time = time()
         log.info("Simulation start...")
-        pb = get_progressbar()
-        for i in pb(xrange(iterations//dump_freq)):
+        it = xrange(iterations//dump_freq)
+        if self.pb:
+            it = get_progressbar()(it)
+        for i in it:
             self._do_iterations(dump_freq)
             self.dump_results((i+1)*dump_freq)
 

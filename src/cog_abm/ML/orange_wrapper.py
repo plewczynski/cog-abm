@@ -74,9 +74,12 @@ class OrangeClassifier(core.Classifier):
             raise ValueError("No %s learner in orange libs", name)
         self.classifier_args = args
         self.classifier_kargs = kargs
-        self.classifier = self.classifier_class(*args, **kargs)
         self.domain_with_cls = None
+        self._create_new_classifier()
 
+    def _create_new_classifier(self):
+        self.classifier = self.classifier_class(*self.classifier_args, \
+            **self.classifier_kargs)
 
     def _extract_value(self, cls):
         return cls.value
@@ -107,7 +110,6 @@ class OrangeClassifier(core.Classifier):
         d = dict(probs.items())
         return d
 
-
     def train(self, samples):
         """
         Trains classifier with given samples.
@@ -123,8 +125,7 @@ class OrangeClassifier(core.Classifier):
         et = orange.ExampleTable(self.domain_with_cls)
         et.extend([convert_sample_with_cls(self.domain_with_cls, s)
                                 for s in samples])
-        self.classifier = self.classifier_class(*self.classifier_args,\
-                                                **self.classifier_kargs)
+        self._create_new_classifier()
         self.classifier = self.classifier(et)
 
 #        self.classifier = self.classifier_class(et, *self.classifier_args,\

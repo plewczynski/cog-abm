@@ -2,7 +2,14 @@
 Most useful things connected with ML
 """
 import math
+
 from itertools import izip
+from random import shuffle
+
+from scipy.io.arff import loadarff
+
+from cog_abm.extras.tools import flatten
+
 
 class Classifier(object):
 
@@ -43,13 +50,17 @@ class Attribute(object):
     """
 
     def get_value(self, value):
+        ''' value is inner representation
+        '''
         pass
 
     def set_value(self, value):
+        ''' value is outer representation
+        '''
         return value
 
     def __eq__(self, other):
-        return self.ID==other.ID
+        return self.ID == other.ID
 
 
 class NumericAttribute(Attribute):
@@ -71,9 +82,8 @@ class NominalAttribute(Attribute):
         """
         symbols = [str(s) for s in symbols]
         self.symbols = tuple(s for s in symbols)
-        self.mapping = dict(izip(self.symbols, xrange(len(self.symbols))))
-#               for i, s in enumerate(symbols):
-#                       self.mapping[s] = i
+        self.mapping = dict(reversed(x) for x in enumerate(self.symbols))
+        self.tmp_rng = set(xrange(len(self.symbols)))
 
     def get_symbol(self, idx):
         return self.symbols[idx]
@@ -85,44 +95,36 @@ class NominalAttribute(Attribute):
         return self.get_symbol(value)
 
     def set_value(self, value):
-        if str(value) in self.symbols:
-            return self.get_idx(value)
-        elif value in range(len(self.symbols)):
-            return value
-        else:
-            raise LookupError("Couldn't set attribute to: "+str(value))
+        return self.set_symbol(value)
+
+    def set_symbol(self, symbol):
+        return self.get_idx(symbol)
 
     def __eq__(self, other):
         return super(NominalAttribute, self).__eq__(other) and \
-                set(self.symbols)==set(other.symbols)
+            set(self.symbols) == set(other.symbols)
 
 
 class Sample(object):
 
     def __init__(self, values, meta=None, cls=None, cls_meta=None,
-                                            dist_fun=None, last_is_class=False, cls_idx=None):
+                        dist_fun=None, last_is_class=False, cls_idx=None):
         self.values = values[:]
-        self.meta = meta or [NumericAttribute() for _ in xrange(len(values))]
+        self.meta = meta or [NumericAttribute() for _ in values]
 
         if last_is_class or cls_idx is not None:
             if last_is_class:
                 cls_idx = -1
-            self.cls = self.values[cls_idx]
             self.cls_meta = self.meta[cls_idx]
+            self.cls = self.values[cls_idx]
             self.meta = self.meta[:]
-            del self.values[cls_idx]
-            del self.meta[cls_idx]
+            del self.values[cls_idx], self.meta[cls_idx]
         else:
             self.cls = cls
             self.cls_meta = cls_meta
 
-        if self.cls is not None and self.cls_meta is not None:
-            self.cls = self.cls_meta.set_value(self.cls)
-        for i in xrange(len(self.values)):
-            self.values[i] = (self.meta[i]).set_value(self.values[i])
-
         if dist_fun is None and \
-                        not [x for x in self.meta if x.ID != NumericAttribute.ID]:
+                all(attr.ID == NumericAttribute.ID for attr in self.meta):
             self.dist_fun = euclidean_distance
         else:
             self.dist_fun = dist_fun
@@ -140,11 +142,11 @@ class Sample(object):
         return self.dist_fun(self, other)
 
     def __eq__(self, other):
-        return self.cls==other.cls and self.cls_meta==other.cls_meta and \
-                self.meta==other.meta and self.values==other.values
+        return self.cls == other.cls and self.cls_meta == other.cls_meta and \
+            self.meta == other.meta and self.values == other.values
 
     def __hash__(self):
-        return 3*hash(tuple(self.values)) + 5*hash(self.cls)
+        return 3 * hash(tuple(self.values)) + 5 * hash(self.cls)
 
     def __str__(self):
         return "({0}, {1})".format(str(self.get_values()), self.get_cls())
@@ -157,7 +159,7 @@ class Sample(object):
 
     def copy_full(self):
         return Sample(self.values, self.meta, self.cls, self.cls_meta,
-                                                                                                                        self.dist_fun)
+                                self.dist_fun)
 
     def copy_set_cls(self, cls, meta):
         s = self.copy_basic()
@@ -165,22 +167,20 @@ class Sample(object):
         s.cls = meta.set_value(cls)
         return s
 
-#Sample distance functions
 
+#Sample distance functions
 def euclidean_distance(sx, sy):
     return math.sqrt(math.fsum([
-            (x-y)*(x-y) for x, y in izip(sx.get_values(), sy.get_values())
-            ]))
+        (x - y) * (x - y) for x, y in izip(sx.get_values(), sy.get_values())
+        ]))
 
-
-from scipy.io.arff import loadarff
 
 def load_samples_arff(file_name, last_is_class=False, look_for_cls=True):
     a_data, a_meta = loadarff(file_name)
     names = a_meta.names()
 
-    attr = {"nominal":lambda attrs:NominalAttribute(attrs),
-                    "numeric":lambda _:NumericAttribute()}
+    attr = {"nominal": lambda attrs: NominalAttribute(attrs),
+            "numeric": lambda _: NumericAttribute()}
 
     gen = (a_meta[n] for n in names)
     meta = [attr[a[0]](a[1]) for a in gen]
@@ -191,21 +191,47 @@ def load_samples_arff(file_name, last_is_class=False, look_for_cls=True):
                 cls_idx = i
                 break
 
-    fun = lambda s: Sample([mi.set_value(vi) for mi, vi in izip(meta, s)],
-                                            meta, last_is_class=last_is_class, cls_idx=cls_idx)
+    def create_sample(s):
+        values = [mi.set_value(vi) for mi, vi in izip(meta, s)]
+        return \
+            Sample(values, meta, last_is_class=last_is_class, cls_idx=cls_idx)
 
-    return [fun(s) for s in a_data]
+    return [create_sample(s) for s in a_data]
 
 
-def split_data(data, train_ratio = 2./3.):
+def split_data(data, train_ratio=2. / 3.):
     """ data - samples to split into two sets: train and test
     train_ratio - real number in [0,1]
 
     returns (train, test) - pair of data sets
     """
-    from random import shuffle
     tmp = [s for s in data]
     shuffle(tmp)
-    train = [s for i,s in enumerate(tmp) if i<train_ratio*len(tmp)]
-    test = [s for i,s in enumerate(tmp) if i>=train_ratio*len(tmp)]
+    train = [s for i, s in enumerate(tmp) if i < train_ratio * len(tmp)]
+    test = [s for i, s in enumerate(tmp) if i >= train_ratio * len(tmp)]
     return (train, test)
+
+
+def split_data_cv(data, folds=8):
+    """ data - samples to split into two sets *folds* times
+
+    returns [(train, test), ...]  - list of pairs of data sets
+    """
+    tmp = [s for s in data]
+    shuffle(tmp)
+    N = len(tmp)
+    M = N / folds
+    overflow = N % folds
+    splits = []
+    i = 0
+    while i < N:
+        n = M
+        if overflow > 0:
+            overflow -= 1
+            n += 1
+        split = tmp[i:i + n]
+        splits.append(split)
+        i += n
+
+    return [(flatten(splits[:i] + splits[i + 1:]), splits[i])
+        for i in xrange(folds)]

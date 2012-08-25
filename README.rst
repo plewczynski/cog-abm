@@ -109,3 +109,9 @@ Required librares (easy to install with pip)
     *Programming:* Konrad Kurdej, Michał Łukasik, Marek Maj
 
     *Mentoring:* Dariusz Plewczyński, Franciszek Rakowski
+
+License
+-------
+
+This software and its documentation is licensed under BSD 3-Clause License.
+Its content you can find in file **LICENSE.rst**
